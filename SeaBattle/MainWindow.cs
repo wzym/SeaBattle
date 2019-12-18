@@ -1,24 +1,31 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
-using System.Threading;
 using System.Windows.Forms;
 
 namespace SeaBattle
 {
     internal class MainWindow : Form
     {
+        private const int widthFieldKoeff = 26;
+        private const int heightFieldKoeff = 12;
         internal event Action<Point> UserClick;
+        internal event Action MainButtonOnClick;
+        private readonly Brush LeftBackgroundColour = Brushes.GreenYellow;
+        private readonly Brush RightBackgroundColour = Brushes.BlueViolet;
         private int cellSize;
         private readonly CellType[,] leftCells = new CellType[10, 10];
         private readonly CellType[,] rightCells = new CellType[10, 10];
         private readonly Pen borderPen = new Pen(Brushes.Black, 1);
         private readonly Pen markPen = new Pen(Brushes.Black, 1);
         private int padding;
+        private readonly Label leftInfo = new Label();
+        private readonly Label rightInfo = new Label();
+        private Font font = new Font("Times New Roman", 50);
+        private readonly Button mainButton = new Button();
 
         public MainWindow()
-        {            
+        {
             DoubleBuffered = true;
             ClientSize = new Size(2000, 1000);
             MinimumSize = new Size(800, 400);
@@ -31,7 +38,43 @@ namespace SeaBattle
                 ChangeSizes();
                 Invalidate();
             };
-            MouseClick += (sender, args) => ProcessClick(args.X, args.Y);
+            MouseClick += (sender, args) => ProcessClick(args.X, args.Y);           
+            AddNActivateInfoLabels();
+            AddNActivateButtons();            
+        }
+
+        internal void Clear()
+        {
+            for(var y = 0; y < GameModel.HeightOfField; y++)
+                for(var x = 0; x < GameModel.WidthOfField; x++)
+                {
+                    leftCells[x, y] = CellType.Sea;
+                    rightCells[x, y] = CellType.Sea;
+                }           
+        }
+
+        private void AddNActivateButtons()
+        {
+            mainButton.Click += (sender, args) => MainButtonOnClick.Invoke();
+            mainButton.Text = "Start?";            
+            Controls.Add(mainButton);
+            SetButtonPosition();            
+        }
+
+        private void AddNActivateInfoLabels()
+        {
+            leftInfo.BackColor = Color.Transparent;
+            rightInfo.BackColor = Color.Transparent;
+            rightInfo.TextAlign = ContentAlignment.MiddleRight;
+            leftInfo.Font = font;
+            Controls.Add(leftInfo); 
+            Controls.Add(rightInfo);
+        }
+
+        internal void SetNewGameInfo(string leftStatus, string rightStatus)
+        {
+            leftInfo.Text = leftStatus;
+            rightInfo.Text = rightStatus;
         }
 
         public void DrawCell(Point place, CellType type, bool left)
@@ -54,10 +97,10 @@ namespace SeaBattle
 
         private void ProcessClick(int x, int y)
         {
-            if (x < ClientSize.Width - padding && x > ClientSize.Width - padding - 11 * cellSize
-                && y > padding && y < 11 * cellSize)
+            if (x < ClientSize.Width - padding && x > ClientSize.Width - padding - cellSize * (GameModel.WidthOfField + 1)
+                && y > padding && y < cellSize * (GameModel.HeightOfField + 1))
             {
-                var xOfCell = (x - (ClientSize.Width - padding - 10 * cellSize)) / cellSize;
+                var xOfCell = (x - (ClientSize.Width - padding - GameModel.WidthOfField * cellSize)) / cellSize;
                 var yOfCell = (y - padding) / cellSize;
                 UserClick?.Invoke(new Point(xOfCell + 1, yOfCell + 1));
             }
@@ -65,31 +108,32 @@ namespace SeaBattle
 
         private void ChangeSizes()
         {
-            var byWidth = ClientSize.Width / 2.5 / 10;
-            var byHeight = ClientSize.Height / 1.2 / 10;
-            cellSize = (int)Math.Min(byWidth, byHeight);
+            var byWidth = ClientSize.Width / widthFieldKoeff;
+            var byHeight = ClientSize.Height / heightFieldKoeff;
+            cellSize = Math.Min(byWidth, byHeight);
             markPen.Width = cellSize / 6;
         }
 
         private void ActivateCells()
         {
-            for (var i = 0; i < 10; i++)
-                for (var j = 0; j < 10; j++)
+            for (var x = 0; x < GameModel.WidthOfField; x++)
+                for (var y = 0; y < GameModel.HeightOfField; y++)
                 { 
-                    leftCells[i, j] = CellType.Sea;
-                    rightCells[i, j] = CellType.Sea;
+                    leftCells[x, y] = CellType.Sea;
+                    rightCells[x, y] = CellType.Sea;
                 }
         }
 
         private void ReDraw(Graphics g)
-        {
+        {            
             padding = cellSize;
+            DrawBackground(g);
             var leftX = padding;
-            var rightX = ClientSize.Width - padding - 10 * cellSize;
+            var rightX = ClientSize.Width - padding - GameModel.WidthOfField * cellSize;
             var cY = padding;
-            for (var y = 0; y < 10; y++)
+            for (var y = 0; y < GameModel.HeightOfField; y++)
             {
-                for (var x = 0; x < 10; x++)
+                for (var x = 0; x < GameModel.WidthOfField; x++)
                 {
                     g.FillRectangle(Brushes.White, leftX, cY, cellSize, cellSize);
                     g.DrawRectangle(borderPen, leftX, cY, cellSize, cellSize);
@@ -98,15 +142,63 @@ namespace SeaBattle
                     DrawCellObject(leftX, cY, leftCells[x, y], g);
                     DrawCellObject(rightX, cY, rightCells[x, y], g);
 
-
                     leftX += cellSize;
                     rightX += cellSize;
                 }
                 leftX = padding;
-                rightX = ClientSize.Width - padding - (10 * cellSize);
+                rightX = ClientSize.Width - padding - GameModel.WidthOfField * cellSize;
                 cY += cellSize;
-            }           
+            }
+            MoveInfoLabels();
+            SetButtonPosition();
         }
+
+        private void MoveInfoLabels()
+        {
+            var boxHeight = cellSize * GameModel.HeightOfField / 2 - cellSize;
+            var boxWidth = 5 * cellSize / 2;
+            leftInfo.Height = boxHeight;
+            leftInfo.Width = boxWidth;
+            rightInfo.Height = boxHeight;
+            rightInfo.Width = boxWidth;
+            font = new Font("Times New Roman", Math.Min(ClientSize.Width / 40, ClientSize.Height / 20));
+            leftInfo.Font = font;
+            rightInfo.Font = font;
+            leftInfo.Top = 3 * padding / 2;
+            leftInfo.Left = cellSize * GameModel.WidthOfField + 3 * padding / 2;
+            rightInfo.Top = cellSize * GameModel.HeightOfField + padding / 2 - rightInfo.Height;
+            rightInfo.Left = ClientSize.Width - 3 * padding / 2 - (GameModel.WidthOfField * cellSize) - rightInfo.Width;
+        }
+
+        private void SetButtonPosition()
+        {
+            mainButton.Width = cellSize * 2;
+            mainButton.Height = cellSize;
+            mainButton.Font = new Font("Times New Roman", Math.Min(ClientSize.Width / 80, ClientSize.Height / 40));
+            mainButton.Left = ClientSize.Width / 2 - mainButton.Width / 2;
+            mainButton.Top = padding + GameModel.HeightOfField / 2 * cellSize - mainButton.Height / 2;
+        }
+
+
+        private void DrawBackground(Graphics g)
+        {
+            var leftX = padding / 2;
+            var upY = padding / 2;
+            var middleY = padding + cellSize * GameModel.HeightOfField / 2;
+            var middleX1 = 3 * padding / 2 + GameModel.HeightOfField * cellSize;
+            var middleX2 = GetRightFieldUpLeft().X - padding /2;
+            var leftWidth = middleX2 - leftX;
+            var heightY = cellSize * GameModel.HeightOfField + padding;
+            var rightWidth = ClientSize.Width - padding / 2 - middleX2;
+            var leftWidth2 = middleX2 - middleX1;
+
+            g.FillRectangle(LeftBackgroundColour, leftX, upY, leftWidth, heightY);
+            g.FillRectangle(RightBackgroundColour, middleX2, upY, rightWidth, heightY);
+            g.FillRectangle(RightBackgroundColour, middleX1, middleY, leftWidth2, heightY / 2);
+        }
+
+        private Point GetRightFieldUpLeft() 
+            => new Point(ClientSize.Width - padding - cellSize * GameModel.WidthOfField, padding);
 
         private void DrawCellObject(int x, int y, CellType cellType, Graphics g)
         {

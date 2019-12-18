@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
-using System.Threading;
 
 namespace SeaBattle
 {
@@ -15,20 +13,29 @@ namespace SeaBattle
         internal const int HeightOfField = 10;
 
         private readonly MainWindow view;
-        private readonly GameStatus status;
+        private GameStatus status;
 
         internal GameModel(MainWindow window)
-        {
-            status = new GameStatus();
-            view = window;
-            status.GameEnd += WorkOnGameEnd;
+        {            
+            view = window;            
+            view.MainButtonOnClick += ActivateNewGame;
+            ActivateNewGame();
             view.UserClick += p => 
             {
                 status.Player.CurrentTurn = p;
                 status.SetPlayerActive();
                 Turn();
-            };            
-            ShowField(status.Player.Field,true);
+            };                                    
+        }
+
+        private void ActivateNewGame()
+        {
+            status = new GameStatus();
+            status.GameEnd += WorkOnGameEnd;
+            view.Clear();
+            ShowField(status.Player.Field, true);
+            ShowField(status.Rival.Field, false);
+            view.SetNewGameInfo(status.Player.Fleet.ToString(), status.Rival.Fleet.ToString());
             if (status.Active == status.Rival) Turn();
         }
 
@@ -56,7 +63,11 @@ namespace SeaBattle
                         var ship = cell.Ship;
                         cell.SetNewType(CellType.Exploded);
                         ship.SetDamage();
-                        if (ship.IsDead) status.RecordShipDeath(ship);
+                        if (ship.IsDead)
+                        {
+                            status.RecordShipDeath(ship);
+                            view.SetNewGameInfo(status.Player.Fleet.ToString(), status.Rival.Fleet.ToString());
+                        }
                         break;
                     case CellType.Bomb:
                         if (active.IsArtificial) throw new ArgumentException("Ум повторяется.");
