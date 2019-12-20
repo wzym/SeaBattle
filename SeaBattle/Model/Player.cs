@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 
 namespace SeaBattle
@@ -9,7 +10,7 @@ namespace SeaBattle
         internal GameCell[,] Field { get; }
         internal Fleet Fleet { get; }
         internal bool IsLost => Fleet.Health == 0;
-        internal Tg3 TurnGenerator { get; }
+        internal TurnGenerator TurnGenerator { get; }
         
         private Point currentTurn;        
         internal Point CurrentTurn
@@ -47,13 +48,45 @@ namespace SeaBattle
 
         private void InitializeFleet()
         {
+            //ClearField()
             var generator = new FleetGenerator(Field);
             foreach (var (length, shipsAmount) in GameModel.FleetParams)
-                for(var i = 0; i < shipsAmount; i++)                
-                    Fleet.AddShip(generator.SetAndGet(length));
+                for (var i = 0; i < shipsAmount; i++)
+                {
+                    var newShip = generator.GetShip(length);
+                    Fleet.AddShip(newShip);
+                    SetShip(newShip);
+                }
+            LeaveOnlyShipsOnField();
+        }
+
+        private void LeaveOnlyShipsOnField()
+        {
             foreach (var cell in GameModel.WorkingCells(Field))
                 if (cell.Type != CellType.Ship)
                     cell.SetNewType(CellType.Sea);
+        }
+
+        private void SetShip(Ship ship)
+        {
+            foreach (var cell in Ship.PreBody(ship))
+                Field[cell.X, cell.Y].Ship = ship;
+            foreach (var cell in Ship.PreBuffer(ship))
+                Field[cell.X, cell.Y].SetNewType(CellType.Bomb);            
+        }
+
+        internal void SetFleet(IEnumerable<Ship> fleet)
+        {
+            ClearField();
+            foreach(var ship in fleet)            
+                SetShip(ship);
+            LeaveOnlyShipsOnField();
+        }
+
+        private void ClearField()
+        {
+            foreach(var cell in GameModel.WorkingCells(Field))            
+                cell.SetNewType(CellType.Sea);            
         }
 
         public void ReturnResultBack(GameCell cell)

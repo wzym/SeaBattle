@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 
 namespace SeaBattle
@@ -9,13 +10,17 @@ namespace SeaBattle
     {
         private const int widthFieldKoeff = 26;
         private const int heightFieldKoeff = 12;
-        internal event Action<Point> UserClick;
-        internal event Action MainButtonOnClick;
+
+        internal event Action<Point, MouseEventArgs> TurnDone;
+        internal event Action<Point, MouseEventArgs> ShipIsSelectedForSailing;
+        internal event Action RestartGame;
+        internal event Action<IEnumerable<Ship>> FleetIsChosen;
+
         private readonly Brush LeftBackgroundColour = Brushes.GreenYellow;
         private readonly Brush RightBackgroundColour = Brushes.BlueViolet;
         private int cellSize;
-        private readonly CellType[,] leftCells = new CellType[10, 10];
-        private readonly CellType[,] rightCells = new CellType[10, 10];
+        private readonly GameCell[,] leftCells = new GameCell[GameModel.WidthOfField + 2, GameModel.HeightOfField + 2];
+        private readonly GameCell[,] rightCells = new GameCell[GameModel.WidthOfField + 2, GameModel.HeightOfField + 2];
         private readonly Pen borderPen = new Pen(Brushes.Black, 1);
         private readonly Pen markPen = new Pen(Brushes.Black, 1);
         private int padding;
@@ -23,43 +28,82 @@ namespace SeaBattle
         private readonly Label rightInfo = new Label();
         private Font font = new Font("Times New Roman", 50);
         private readonly Button mainButton = new Button();
+        private bool shipSettingRegime = true;        
+        private Ship seilingShip = null;
+        private IEnumerable<Ship> playerFleet;
 
         public MainWindow()
         {
+            //Icon = new Icon("../../ship.ico");
             DoubleBuffered = true;
             ClientSize = new Size(2000, 1000);
             MinimumSize = new Size(800, 400);
             ChangeSizes();
             ActivateCells();
-
+            
             Paint += (sender, args) => ReDraw(args.Graphics);
             SizeChanged += (sender, args) =>
             {
                 ChangeSizes();
                 Invalidate();
             };
-            MouseClick += (sender, args) => ProcessClick(args.X, args.Y);           
+            MouseClick += (sender, args) => ProcessClick(args.X, args.Y, args);
+            MouseMove += (sender, args) => Sail(args);
             AddNActivateInfoLabels();
-            AddNActivateButtons();            
+            AddNActivateButtons();
+        }
+
+        private void Sail(MouseEventArgs args)
+        {
+            if (seilingShip == null) return;
+            if (IsPointInLeftField(args.X, args.Y))
+            {
+                var head = new Point(LeftXCellIndex(args.X), LeftYCellIndex(args.Y));
+                if (!IsPlaceSuitableForSeiling(head)) return;
+
+                foreach (var cell in Ship.PreBody(seilingShip))
+                    leftCells[cell.X, cell.Y].SetNewType(CellType.Sea);
+                seilingShip.Seil(head);
+                foreach (var cell in Ship.PreBody(seilingShip))
+                    leftCells[cell.X, cell.Y].SetNewType(CellType.SeilingShip);
+            }
+            Invalidate();
         }
 
         internal void Clear()
         {
-            for(var y = 0; y < GameModel.HeightOfField; y++)
-                for(var x = 0; x < GameModel.WidthOfField; x++)
+            for(var y = 1; y < GameModel.HeightOfField + 1; y++)
+                for(var x = 1; x < GameModel.WidthOfField + 1; x++)
                 {
-                    leftCells[x, y] = CellType.Sea;
-                    rightCells[x, y] = CellType.Sea;
-                }           
+                    leftCells[x, y].SetNewType(CellType.Sea);
+                    rightCells[x, y].SetNewType(CellType.Sea);
+                }
+            Paint -= winnerChecking; 
         }
 
         private void AddNActivateButtons()
         {
-            mainButton.Click += (sender, args) => MainButtonOnClick.Invoke();
-            mainButton.Text = "Start?";            
+            //mainButton.Click += (_, __) => shipSettingRegime = false;
+            mainButton.Click += BeforeGameOnButtonClick();
+            mainButton.Text = "Start?";
             Controls.Add(mainButton);
-            SetButtonPosition();            
+            SetButtonPosition();
         }
+
+        private EventHandler DuringGameOnButtonClick() => (sender, args) =>
+        {
+            shipSettingRegime = true;
+            RestartGame.Invoke();
+            mainButton.Click -= DuringGameOnButtonClick();
+            mainButton.Click += BeforeGameOnButtonClick();
+        };
+        private EventHandler BeforeGameOnButtonClick() => (sender, args) =>
+        {
+            shipSettingRegime = false;
+            FleetIsChosen?.Invoke(playerFleet);            
+            mainButton.Click -= BeforeGameOnButtonClick();
+            mainButton.Click += DuringGameOnButtonClick();
+        };
 
         private void AddNActivateInfoLabels()
         {
@@ -77,34 +121,126 @@ namespace SeaBattle
             rightInfo.Text = rightStatus;
         }
 
-        public void DrawCell(Point place, CellType type, bool left)
-        {
-            if (left)
-                leftCells[place.X, place.Y] = type;
-            else
-                rightCells[place.X, place.Y] = type;
-            Invalidate();
-        }
-
         internal void DrawCells(IEnumerable<GameCell> cells, bool isLeftField)
         {            
             var field = isLeftField ? leftCells : rightCells;
             foreach (var cell in cells)            
-                field[cell.X - 1, cell.Y - 1] = cell.Type;
+                field[cell.X, cell.Y].SetNewType(cell.Type);
             
             Invalidate();
         }
 
-        private void ProcessClick(int x, int y)
+        internal void DrawFleet(IEnumerable<Ship> fleet, bool inLeftField)
         {
-            if (x < ClientSize.Width - padding && x > ClientSize.Width - padding - cellSize * (GameModel.WidthOfField + 1)
-                && y > padding && y < cellSize * (GameModel.HeightOfField + 1))
+            playerFleet = fleet;
+            var field = inLeftField ? leftCells : rightCells;
+            foreach(var ship in fleet)
             {
-                var xOfCell = (x - (ClientSize.Width - padding - GameModel.WidthOfField * cellSize)) / cellSize;
-                var yOfCell = (y - padding) / cellSize;
-                UserClick?.Invoke(new Point(xOfCell + 1, yOfCell + 1));
+                foreach (var cell in Ship.PreBody(ship))
+                {
+                    field[cell.X, cell.Y].SetNewType(CellType.Ship);
+                    field[cell.X, cell.Y].Ship = ship;
+                }
+                    
+            }
+            Invalidate();
+        }
+
+        private void ProcessClick(int x, int y, MouseEventArgs args)
+        {
+            switch(args.Button)
+            {
+                case MouseButtons.Left:
+                    if (shipSettingRegime && IsPointInLeftField(x, y))
+                    {
+                        if (seilingShip != null)
+                        {
+                            seilingShip = null;
+                            DrawFleet(playerFleet, true);                            
+                        } else
+                        {
+                            var xOfCell = LeftXCellIndex(x);
+                            var yOfCell = LeftYCellIndex(y);
+                            if (leftCells[xOfCell, yOfCell].Type != CellType.Ship)
+                                return;
+                            seilingShip = leftCells[xOfCell, yOfCell].Ship;
+                            foreach (var cell in Ship.PreBody(seilingShip))
+                                leftCells[cell.X, cell.Y].SetNewType(CellType.SeilingShip);                            
+                        }                                              
+                    }
+                    if (!shipSettingRegime && IsPointInRightField(x, y))
+                    {
+                        var xOfCell = (x - (ClientSize.Width - padding - GameModel.WidthOfField * cellSize)) / cellSize;
+                        var yOfCell = (y - padding) / cellSize;
+                        TurnDone?.Invoke(new Point(xOfCell + 1, yOfCell + 1), args);
+                    }
+                    break;
+                case MouseButtons.Right:
+                    if (shipSettingRegime && seilingShip != null)
+                    {
+                        foreach(var cell in Ship.PreBody(seilingShip))
+                            leftCells[cell.X, cell.Y].SetNewType(CellType.Sea);
+                        seilingShip.Reverse();
+                        seilingShip.Seil(FindSuitablePlace(new Point(LeftXCellIndex(x), LeftYCellIndex(y))));
+                        foreach (var cell in Ship.PreBody(seilingShip))
+                            leftCells[cell.X, cell.Y].SetNewType(CellType.SeilingShip);
+                        Invalidate();
+                    }
+                    break;
             }
         }
+
+        private Point FindSuitablePlace(Point source)
+        {
+            var visited = new HashSet<Point>();
+            var presumed = new Queue<GameCell>();
+            var currPlace = source;
+
+            do
+            {
+                foreach (var cell in GetNeighbors(currPlace).Where(c => c.Type == CellType.Sea && !visited.Contains(new Point(c.X, c.Y))))
+                    presumed.Enqueue(cell);
+                if (presumed.Count < 1) throw new Exception("Not found suitable place.");
+                var curr = presumed.Dequeue();
+                currPlace = new Point(curr.X, curr.Y);
+                if (IsPlaceSuitableForSeiling(currPlace)) return currPlace;
+                visited.Add(currPlace);
+            } while (true);
+        }
+
+        private IEnumerable<GameCell> GetNeighbors(Point currPlace)        
+            => new List<GameCell>()
+            {
+                leftCells[currPlace.X - 1, currPlace.Y],
+                leftCells[currPlace.X, currPlace.Y - 1],
+                leftCells[currPlace.X + 1, currPlace.Y],
+                leftCells[currPlace.X, currPlace.Y + 1],
+                leftCells[currPlace.X - 1, currPlace.Y - 1],
+                leftCells[currPlace.X + 1, currPlace.Y - 1],
+                leftCells[currPlace.X - 1, currPlace.Y + 1],
+                leftCells[currPlace.X + 1, currPlace.Y + 1]
+            };        
+
+        private bool IsPlaceSuitableForSeiling(Point place)
+        {
+            foreach (var cell in Ship.PreBody(new Ship(place, seilingShip.Size, seilingShip.IsHorizontal)))
+                if (cell.X > GameModel.WidthOfField || cell.Y > GameModel.HeightOfField
+                    || cell.X < 1 || cell.Y < 1
+                    || leftCells[cell.X, cell.Y].Type == CellType.Ship)
+                    return false;
+            return true;
+        }
+
+        private int LeftXCellIndex(int x) => (x - padding) / cellSize + 1;
+        private int LeftYCellIndex(int y) => (y - padding) / cellSize + 1;
+
+        private bool IsPointInLeftField(int x, int y)
+            => x > padding && x < GameModel.WidthOfField * cellSize + padding
+                && y > padding && y < cellSize * GameModel.HeightOfField + padding;
+
+        private bool IsPointInRightField(int x, int y)
+            => x < ClientSize.Width - padding && x > ClientSize.Width - padding - cellSize * (GameModel.WidthOfField + 1)
+                && y > padding && y < cellSize * (GameModel.HeightOfField + 1);
 
         private void ChangeSizes()
         {
@@ -116,11 +252,25 @@ namespace SeaBattle
 
         private void ActivateCells()
         {
-            for (var x = 0; x < GameModel.WidthOfField; x++)
-                for (var y = 0; y < GameModel.HeightOfField; y++)
+            for(var x = 0; x < GameModel.WidthOfField + 2; x++)
+            {
+                leftCells[x, 0] = new GameCell(CellType.Bomb, x, 0);
+                leftCells[x, leftCells.GetLength(0) - 1] = new GameCell(CellType.Bomb, x, leftCells.GetLength(0) - 1);
+                rightCells[x, 0] = new GameCell(CellType.Bomb, x, 0);
+                rightCells[x, rightCells.GetLength(0) - 1] = new GameCell(CellType.Bomb, x, rightCells.GetLength(0) - 1);
+            }
+            for (var y = 0; y < GameModel.WidthOfField + 2; y++)
+            {
+                leftCells[0, y] = new GameCell(CellType.Bomb, y, 0);
+                leftCells[leftCells.GetLength(1) - 1, y] = new GameCell(CellType.Bomb, leftCells.GetLength(1) - 1, y);
+                rightCells[0, y] = new GameCell(CellType.Bomb, y, 0);
+                rightCells[rightCells.GetLength(1) - 1, y] = new GameCell(CellType.Bomb, rightCells.GetLength(1) - 1, y);
+            }
+            for (var x = 1; x < GameModel.WidthOfField + 1; x++)
+                for (var y = 1; y < GameModel.HeightOfField + 1; y++)
                 { 
-                    leftCells[x, y] = CellType.Sea;
-                    rightCells[x, y] = CellType.Sea;
+                    leftCells[x, y] = new GameCell(CellType.Sea, x, y);
+                    rightCells[x, y] = new GameCell(CellType.Sea, x, y);
                 }
         }
 
@@ -131,16 +281,16 @@ namespace SeaBattle
             var leftX = padding;
             var rightX = ClientSize.Width - padding - GameModel.WidthOfField * cellSize;
             var cY = padding;
-            for (var y = 0; y < GameModel.HeightOfField; y++)
+            for (var y = 1; y < GameModel.HeightOfField + 1; y++)
             {
-                for (var x = 0; x < GameModel.WidthOfField; x++)
+                for (var x = 1; x < GameModel.WidthOfField + 1; x++)
                 {
                     g.FillRectangle(Brushes.White, leftX, cY, cellSize, cellSize);
                     g.DrawRectangle(borderPen, leftX, cY, cellSize, cellSize);
                     g.FillRectangle(Brushes.White, rightX, cY, cellSize, cellSize);
                     g.DrawRectangle(borderPen, rightX, cY, cellSize, cellSize);
-                    DrawCellObject(leftX, cY, leftCells[x, y], g);
-                    DrawCellObject(rightX, cY, rightCells[x, y], g);
+                    DrawCellObject(leftX, cY, leftCells[x, y].Type, g);
+                    DrawCellObject(rightX, cY, rightCells[x, y].Type, g);
 
                     leftX += cellSize;
                     rightX += cellSize;
@@ -178,7 +328,6 @@ namespace SeaBattle
             mainButton.Left = ClientSize.Width / 2 - mainButton.Width / 2;
             mainButton.Top = padding + GameModel.HeightOfField / 2 * cellSize - mainButton.Height / 2;
         }
-
 
         private void DrawBackground(Graphics g)
         {
@@ -222,6 +371,11 @@ namespace SeaBattle
                     break;                    
                 case CellType.Sea:
                     break;
+                case CellType.SeilingShip:
+                    g.FillRectangle(Brushes.LightGray, x, y, cellSize, cellSize);
+                    g.DrawRectangle(new Pen(Brushes.White, 1), x + cellBorder, y + cellBorder
+                        , cellSize - 2 * cellBorder, cellSize - 2 * cellBorder);
+                    break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(cellType), cellType, null);
             }
@@ -230,10 +384,13 @@ namespace SeaBattle
         public void CheckWinner(bool winnerIsLeft)
         {
             var colour = winnerIsLeft ? Brushes.Aqua : Brushes.Red;
-            Paint += (_, arg) =>
+            winnerChecking = (_, arg) =>
             arg.Graphics.FillRectangle(colour
             , ClientSize.Width - padding - (10 * cellSize), padding
             , 10 * cellSize, 10 * cellSize);
+            Paint += winnerChecking;
         }
+
+        private PaintEventHandler winnerChecking;        
     }
 }

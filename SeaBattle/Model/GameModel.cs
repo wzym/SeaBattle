@@ -18,23 +18,29 @@ namespace SeaBattle
         internal GameModel(MainWindow window)
         {            
             view = window;            
-            view.MainButtonOnClick += ActivateNewGame;
+            view.RestartGame += ActivateNewGame;
+            view.FleetIsChosen += SetFleetChosenByPlayer;
             ActivateNewGame();
-            view.UserClick += p => 
+            view.TurnDone += (p, _) => 
             {
                 status.Player.CurrentTurn = p;
                 status.SetPlayerActive();
                 Turn();
-            };                                    
+            };
+        }
+
+        private void SetFleetChosenByPlayer(IEnumerable<Ship> fleet)
+        {
+            status.Player.Fleet.SetShips(fleet);
+            status.Player.SetFleet(fleet);
         }
 
         private void ActivateNewGame()
         {
             status = new GameStatus();
             status.GameEnd += WorkOnGameEnd;
-            view.Clear();
-            ShowField(status.Player.Field, true);
-            ShowField(status.Rival.Field, false);
+            view.Clear();            
+            view.DrawFleet(status.Player.Fleet.Ships, true);
             view.SetNewGameInfo(status.Player.Fleet.ToString(), status.Rival.Fleet.ToString());
             if (status.Active == status.Rival) Turn();
         }

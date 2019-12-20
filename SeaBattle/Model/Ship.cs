@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
 
@@ -6,8 +7,8 @@ namespace SeaBattle
 {
     internal class Ship
     {
-        private bool IsHorizontal { get; }
-        private Point HeadPosition { get; }
+        internal bool IsHorizontal { get; private set; }
+        internal Point HeadPosition { get; private set; }
         internal int Size { get; }
         private int Health { get; set; }
         internal bool IsDead => Health <= 0;
@@ -55,6 +56,19 @@ namespace SeaBattle
             var newX = isHorizontal ? curr.X + k : curr.X;
             var newY = isHorizontal ? curr.Y : curr.Y + k;
             return new Point(newX, newY);
+        }
+
+        internal void Seil(Point newHead)
+        {
+            HeadPosition = newHead;
+        }
+
+        internal void Reverse()
+            => IsHorizontal = !IsHorizontal;
+
+        internal void Seil(object findSuitablePlace)
+        {
+            throw new NotImplementedException();
         }
     }
 }

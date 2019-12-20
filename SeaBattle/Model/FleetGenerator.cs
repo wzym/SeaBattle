@@ -15,22 +15,13 @@ namespace SeaBattle
             this.field = field;            
         }
 
-        internal Ship SetAndGet(int decksAmount)
+        internal Ship GetShip(int decksAmount)
         {
             var variants = FormVariants(decksAmount);
             var index = Rnd.Next(variants.Count);
-            var ship = variants[index];
-            SetShip(ship);
+            var ship = variants[index];            
             return ship;
-        }
-
-        private void SetShip(Ship ship)
-        {
-            foreach (var cell in Ship.PreBody(ship))
-                field[cell.X, cell.Y].Ship = ship;
-            foreach (var cell in Ship.PreBuffer(ship))
-                field[cell.X, cell.Y].SetNewType(CellType.Bomb);
-        }
+        }        
 
         private List<Ship> FormVariants(int decksAmount)
         {

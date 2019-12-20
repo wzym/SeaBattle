@@ -6,23 +6,30 @@ namespace SeaBattle
 {
     internal class Fleet
     {
-        private readonly List<Ship> body = new List<Ship>();
-        internal int Health => body.Count;
+        internal List<Ship> Ships { get; private set; }  = new List<Ship>();
+        internal int Health => Ships.Count;
 
         internal void AddShip(Ship ship)
         {
-            body.Add(ship);
+            Ships.Add(ship);
         }
 
-        public void Remove(Ship deadShip)
+        internal void SetShips(IEnumerable<Ship> fleet)
         {
-            body.Remove(deadShip);
+            Ships = new List<Ship>();
+            foreach (var ship in fleet)
+                AddShip(ship);
+        }
+
+        internal void Remove(Ship deadShip)
+        {
+            Ships.Remove(deadShip);
         }
 
         public override string ToString()
         {
             var status = new Dictionary<int, int>();
-            foreach(var ship in body)            
+            foreach(var ship in Ships)            
                 if (status.ContainsKey(ship.Size))
                     status[ship.Size]++;
                 else
