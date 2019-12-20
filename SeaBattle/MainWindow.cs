@@ -9,10 +9,9 @@ namespace SeaBattle
     internal class MainWindow : Form
     {
         private const int widthFieldKoeff = 26;
-        private const int heightFieldKoeff = 12;
+        private const int heightFieldKoeff = 14;
 
-        internal event Action<Point, MouseEventArgs> TurnDone;
-        internal event Action<Point, MouseEventArgs> ShipIsSelectedForSailing;
+        internal event Action<Point, MouseEventArgs> TurnDone;        
         internal event Action RestartGame;
         internal event Action<IEnumerable<Ship>> FleetIsChosen;
 
@@ -26,7 +25,7 @@ namespace SeaBattle
         private int padding;
         private readonly Label leftInfo = new Label();
         private readonly Label rightInfo = new Label();
-        private Font font = new Font("Times New Roman", 50);
+        private readonly Label globalGameInfo = new Label();        
         private readonly Button mainButton = new Button();
         private bool shipSettingRegime = true;        
         private Ship seilingShip = null;
@@ -49,8 +48,9 @@ namespace SeaBattle
             };
             MouseClick += (sender, args) => ProcessClick(args.X, args.Y, args);
             MouseMove += (sender, args) => Sail(args);
-            AddNActivateInfoLabels();
+            AddNActivateLabels();
             AddNActivateButtons();
+            globalGameInfo.Text = "Крайние клавиши мыши - выбрать, установить и повернуть корабль.";
         }
 
         private void Sail(MouseEventArgs args)
@@ -83,7 +83,8 @@ namespace SeaBattle
 
         private void AddNActivateButtons()
         {
-            //mainButton.Click += (_, __) => shipSettingRegime = false;
+            mainButton.BackColor = Color.DarkSlateGray;
+            mainButton.ForeColor = Color.White;
             mainButton.Click += BeforeGameOnButtonClick();
             mainButton.Text = "Start?";
             Controls.Add(mainButton);
@@ -96,23 +97,45 @@ namespace SeaBattle
             RestartGame.Invoke();
             mainButton.Click -= DuringGameOnButtonClick();
             mainButton.Click += BeforeGameOnButtonClick();
+            globalGameInfo.Text = "Крайние клавиши мыши - выбрать, установить и повернуть корабль.";
         };
         private EventHandler BeforeGameOnButtonClick() => (sender, args) =>
         {
+            if (!ShipsSetCorrect())
+            {
+                globalGameInfo.Text = "Неверная расстановка кораблей.";
+                return;
+            }
             shipSettingRegime = false;
             FleetIsChosen?.Invoke(playerFleet);            
             mainButton.Click -= BeforeGameOnButtonClick();
             mainButton.Click += DuringGameOnButtonClick();
         };
 
-        private void AddNActivateInfoLabels()
+        private bool ShipsSetCorrect()
         {
+            foreach (var ship in playerFleet)
+                foreach (var cell in Ship.PreBuffer(ship))
+                    if (leftCells[cell.X, cell.Y].Type == CellType.Ship)
+                        return false;
+            return true;
+        }
+
+        private void AddNActivateLabels()
+        {            
             leftInfo.BackColor = Color.Transparent;
             rightInfo.BackColor = Color.Transparent;
             rightInfo.TextAlign = ContentAlignment.MiddleRight;
-            leftInfo.Font = font;
+            leftInfo.Font = new Font("Times New Roman", 50);
             Controls.Add(leftInfo); 
             Controls.Add(rightInfo);
+
+            globalGameInfo.Padding = new Padding(10, 0, 0, 1);
+            globalGameInfo.ForeColor = Color.White;
+            globalGameInfo.Font = new Font("Times New Roman", 30);
+            globalGameInfo.TextAlign = ContentAlignment.MiddleLeft;
+            globalGameInfo.BackColor = Color.DarkSlateGray;
+            Controls.Add(globalGameInfo);            
         }
 
         internal void SetNewGameInfo(string leftStatus, string rightStatus)
@@ -120,6 +143,9 @@ namespace SeaBattle
             leftInfo.Text = leftStatus;
             rightInfo.Text = rightStatus;
         }
+
+        internal void SetGlobalInfo(string message)
+            => globalGameInfo.Text = message;
 
         internal void DrawCells(IEnumerable<GameCell> cells, bool isLeftField)
         {            
@@ -156,7 +182,7 @@ namespace SeaBattle
                         if (seilingShip != null)
                         {
                             seilingShip = null;
-                            DrawFleet(playerFleet, true);                            
+                            DrawFleet(playerFleet, true);
                         } else
                         {
                             var xOfCell = LeftXCellIndex(x);
@@ -165,14 +191,24 @@ namespace SeaBattle
                                 return;
                             seilingShip = leftCells[xOfCell, yOfCell].Ship;
                             foreach (var cell in Ship.PreBody(seilingShip))
-                                leftCells[cell.X, cell.Y].SetNewType(CellType.SeilingShip);                            
-                        }                                              
+                                leftCells[cell.X, cell.Y].SetNewType(CellType.SeilingShip);
+                        }
                     }
-                    if (!shipSettingRegime && IsPointInRightField(x, y))
+                    else if (!shipSettingRegime && IsPointInRightField(x, y))
                     {
                         var xOfCell = (x - (ClientSize.Width - padding - GameModel.WidthOfField * cellSize)) / cellSize;
                         var yOfCell = (y - padding) / cellSize;
                         TurnDone?.Invoke(new Point(xOfCell + 1, yOfCell + 1), args);
+                    }
+                    else if (shipSettingRegime && IsPointInRightField(x, y))
+                    {
+                        var pos = new Random().Next(30);
+                        if (pos == 1) globalGameInfo.Text = "Нехуй тыкать - расставляй по-человечески и играй.";
+                    }
+                    else if (!shipSettingRegime && IsPointInLeftField(x, y))
+                    {
+                        var pos = new Random().Next(20);
+                        if (pos == 1) globalGameInfo.Text = "Вот ведь хуяшечки: столько бестолкового движения в одном месте.";
                     }
                     break;
                 case MouseButtons.Right:
@@ -299,11 +335,11 @@ namespace SeaBattle
                 rightX = ClientSize.Width - padding - GameModel.WidthOfField * cellSize;
                 cY += cellSize;
             }
-            MoveInfoLabels();
+            MoveLabels();
             SetButtonPosition();
         }
 
-        private void MoveInfoLabels()
+        private void MoveLabels()
         {
             var boxHeight = cellSize * GameModel.HeightOfField / 2 - cellSize;
             var boxWidth = 5 * cellSize / 2;
@@ -311,13 +347,20 @@ namespace SeaBattle
             leftInfo.Width = boxWidth;
             rightInfo.Height = boxHeight;
             rightInfo.Width = boxWidth;
-            font = new Font("Times New Roman", Math.Min(ClientSize.Width / 40, ClientSize.Height / 20));
+            var font = new Font("Times New Roman", Math.Min(ClientSize.Width / 40, ClientSize.Height / 20));
             leftInfo.Font = font;
             rightInfo.Font = font;
             leftInfo.Top = 3 * padding / 2;
             leftInfo.Left = cellSize * GameModel.WidthOfField + 3 * padding / 2;
             rightInfo.Top = cellSize * GameModel.HeightOfField + padding / 2 - rightInfo.Height;
             rightInfo.Left = ClientSize.Width - 3 * padding / 2 - (GameModel.WidthOfField * cellSize) - rightInfo.Width;
+
+            globalGameInfo.Height = cellSize;
+            globalGameInfo.Width = ClientSize.Width - cellSize;
+            globalGameInfo.Left = cellSize / 2;
+            globalGameInfo.Top = GameModel.HeightOfField * cellSize + padding * 2;
+            var globalFont = new Font("Times New Roman", font.Size / 6 * 5);
+            globalGameInfo.Font = globalFont;
         }
 
         private void SetButtonPosition()

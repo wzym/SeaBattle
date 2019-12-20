@@ -14,8 +14,7 @@ namespace SeaBattle
         internal GameStatus()
         {
             Player = new Player(false);
-            Rival = new Player(true);
-            DefineActivity();
+            Rival = new Player(true);            
         }
 
         internal void RecordShipDeath(Ship deadShip)
@@ -30,7 +29,7 @@ namespace SeaBattle
             GameEnd?.Invoke();
         }
 
-        private void DefineActivity()
+        internal void DefineActivity()
         {
             var rnd = new Random();
             if (rnd.Next(2) == 0)

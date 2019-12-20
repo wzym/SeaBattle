@@ -33,16 +33,24 @@ namespace SeaBattle
         {
             status.Player.Fleet.SetShips(fleet);
             status.Player.SetFleet(fleet);
+            status.DefineActivity();
+            if (status.Active == status.Rival)
+            {
+                view.SetGlobalInfo("Первый ход достался машине.");
+                Turn();
+            } else
+            {
+                view.SetGlobalInfo("Ваш ход.");
+            }
         }
 
         private void ActivateNewGame()
         {
             status = new GameStatus();
             status.GameEnd += WorkOnGameEnd;
-            view.Clear();            
+            view.Clear();
             view.DrawFleet(status.Player.Fleet.Ships, true);
-            view.SetNewGameInfo(status.Player.Fleet.ToString(), status.Rival.Fleet.ToString());
-            if (status.Active == status.Rival) Turn();
+            view.SetNewGameInfo(status.Player.Fleet.ToString(), status.Rival.Fleet.ToString());            
         }
 
         private void WorkOnGameEnd()
