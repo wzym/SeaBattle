@@ -1,6 +1,6 @@
 ﻿namespace SeaBattle
 {
-    internal class GameCell
+    internal struct GameCell
     {
         private Ship ship;
         internal int X { get; }
@@ -22,6 +22,7 @@
             X = x;
             Y = y;
             Type = type;
+            ship = null;
         }
 
         internal void SetNewType(CellType newType)

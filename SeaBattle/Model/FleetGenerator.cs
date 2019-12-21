@@ -12,7 +12,7 @@ namespace SeaBattle
 
         public FleetGenerator(GameCell[,] field)
         {
-            this.field = field;            
+            this.field = field;
         }
 
         internal Ship GetShip(int decksAmount)

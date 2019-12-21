@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 
 namespace SeaBattle
@@ -70,12 +71,14 @@ namespace SeaBattle
                 switch (cell.Type)
                 {
                     case CellType.Sea:
-                        cell.SetNewType(CellType.Bomb);
+                        //cell.SetNewType(CellType.Bomb);
+                        status.Passive.Field[turn.X, turn.Y].SetNewType(CellType.Bomb);
                         status.InvertActivity();
                         break;
                     case CellType.Ship:
                         var ship = cell.Ship;
-                        cell.SetNewType(CellType.Exploded);
+                        //cell.SetNewType(CellType.Exploded);
+                        status.Passive.Field[turn.X, turn.Y].SetNewType(CellType.Exploded);
                         ship.SetDamage();
                         if (ship.IsDead)
                         {
@@ -92,7 +95,8 @@ namespace SeaBattle
                     default:
                         throw new ArgumentOutOfRangeException();
                 }
-                active.ReturnResultBack(cell);                
+                //active.ReturnResultBack(cell);
+                active.ReturnResultBack(passive.Field[turn.X, turn.Y]);
                 ShowField(passive.Field, active == status.Rival);
                 if (!status.Active.IsArtificial) break;                
             }
@@ -102,14 +106,16 @@ namespace SeaBattle
         {
             var shouldShowCell = isLeftField ?
                 (Func<CellType, bool>) (_ => true) : c => c != CellType.Ship;
-            view.DrawCells(WorkingCells(field).Where(c => shouldShowCell(c.Type)), isLeftField);           
+            //view.DrawCells(WorkingCells(field).Where(c => shouldShowCell(c.Type)), isLeftField);
+            view.DrawCells(WorkingCells(field).Select(p => field[p.X, p.Y]).Where(c => shouldShowCell(c.Type)), isLeftField);
         }
 
-        internal static IEnumerable<GameCell> WorkingCells(GameCell[,] field)
+        internal static IEnumerable<Point> WorkingCells(GameCell[,] field)
         {
             for (var y = 1; y < field.GetLength(1) - 1; y++)
-            for (var x = 1; x < field.GetLength(0) - 1; x++)
-                yield return field[x, y];
+                for (var x = 1; x < field.GetLength(0) - 1; x++)
+                    //yield return field[x, y];
+                    yield return new Point(x, y);
         }
     }
 }

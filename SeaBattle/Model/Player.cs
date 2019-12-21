@@ -63,8 +63,10 @@ namespace SeaBattle
         private void LeaveOnlyShipsOnField()
         {
             foreach (var cell in GameModel.WorkingCells(Field))
-                if (cell.Type != CellType.Ship)
-                    cell.SetNewType(CellType.Sea);
+                //if (cell.Type != CellType.Ship)
+                //    cell.SetNewType(CellType.Sea);
+                if (Field[cell.X, cell.Y].Type != CellType.Ship)
+                    Field[cell.X, cell.Y].SetNewType(CellType.Sea);
         }
 
         private void SetShip(Ship ship)
@@ -85,8 +87,9 @@ namespace SeaBattle
 
         private void ClearField()
         {
-            foreach(var cell in GameModel.WorkingCells(Field))            
-                cell.SetNewType(CellType.Sea);            
+            foreach (var cell in GameModel.WorkingCells(Field))
+                //cell.SetNewType(CellType.Sea);
+                Field[cell.X, cell.Y].SetNewType(CellType.Sea);
         }
 
         public void ReturnResultBack(GameCell cell)
