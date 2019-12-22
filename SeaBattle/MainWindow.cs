@@ -3,20 +3,21 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using SeaBattle.Properties;
 
 namespace SeaBattle
 {
-    internal class MainWindow : Form
+    internal sealed class MainWindow : Form
     {
-        private const int widthFieldKoeff = 26;
-        private const int heightFieldKoeff = 14;
+        private const int WidthFieldCoefficient = 26;
+        private const int HeightFieldCoefficient = 14;
 
         internal event Action<Point, MouseEventArgs> TurnDone;        
         internal event Action RestartGame;
         internal event Action<IEnumerable<Ship>> FleetIsChosen;
 
-        private readonly Brush LeftBackgroundColour = Brushes.GreenYellow;
-        private readonly Brush RightBackgroundColour = Brushes.BlueViolet;
+        private readonly Brush leftBackgroundColour = Brushes.GreenYellow;
+        private readonly Brush rightBackgroundColour = Brushes.BlueViolet;
         private int cellSize;
         private readonly GameCell[,] leftCells = new GameCell[GameModel.WidthOfField + 2, GameModel.HeightOfField + 2];
         private readonly GameCell[,] rightCells = new GameCell[GameModel.WidthOfField + 2, GameModel.HeightOfField + 2];
@@ -28,7 +29,7 @@ namespace SeaBattle
         private readonly Label globalGameInfo = new Label();        
         private readonly Button mainButton = new Button();
         private bool shipSettingRegime = true;        
-        private Ship seilingShip = null;
+        private Ship seilingShip;
         private IEnumerable<Ship> playerFleet;
 
         public MainWindow()
@@ -50,7 +51,7 @@ namespace SeaBattle
             MouseMove += (sender, args) => Sail(args);
             AddNActivateLabels();
             AddNActivateButtons();
-            globalGameInfo.Text = "Крайние клавиши мыши - выбрать, установить и повернуть корабль.";
+            globalGameInfo.Text = Resources.Ship_setting_instruction;
         }
 
         private void Sail(MouseEventArgs args)
@@ -63,9 +64,9 @@ namespace SeaBattle
 
                 foreach (var cell in Ship.PreBody(seilingShip))
                     leftCells[cell.X, cell.Y].SetNewType(CellType.Sea);
-                seilingShip.Seil(head);
+                seilingShip.Sail(head);
                 foreach (var cell in Ship.PreBody(seilingShip))
-                    leftCells[cell.X, cell.Y].SetNewType(CellType.SeilingShip);
+                    leftCells[cell.X, cell.Y].SetNewType(CellType.SailingShip);
             }
             Invalidate();
         }
@@ -86,7 +87,7 @@ namespace SeaBattle
             mainButton.BackColor = Color.DarkSlateGray;
             mainButton.ForeColor = Color.White;
             mainButton.Click += BeforeGameOnButtonClick();
-            mainButton.Text = "Start?";
+            mainButton.Text = Resources.MainWindow_before_game;
             Controls.Add(mainButton);
             SetButtonPosition();
         }
@@ -94,16 +95,16 @@ namespace SeaBattle
         private EventHandler DuringGameOnButtonClick() => (sender, args) =>
         {
             shipSettingRegime = true;
-            RestartGame.Invoke();
+            RestartGame?.Invoke();
             mainButton.Click -= DuringGameOnButtonClick();
             mainButton.Click += BeforeGameOnButtonClick();
-            globalGameInfo.Text = "Крайние клавиши мыши - выбрать, установить и повернуть корабль.";
+            globalGameInfo.Text = Resources.Ship_setting_instruction;
         };
         private EventHandler BeforeGameOnButtonClick() => (sender, args) =>
         {
             if (!ShipsSetCorrect())
             {
-                globalGameInfo.Text = "Неверная расстановка кораблей.";
+                globalGameInfo.Text = Resources.Wrong_Ship_Setting;
                 return;
             }
             shipSettingRegime = false;
@@ -156,11 +157,11 @@ namespace SeaBattle
             Invalidate();
         }
 
-        internal void DrawFleet(IEnumerable<Ship> fleet, bool inLeftField)
+        internal void SetAndDrawFleet(IEnumerable<Ship> fleet, bool inLeftField)
         {
             playerFleet = fleet;
             var field = inLeftField ? leftCells : rightCells;
-            foreach(var ship in fleet)
+            foreach(var ship in playerFleet)
             {
                 foreach (var cell in Ship.PreBody(ship))
                 {
@@ -182,7 +183,7 @@ namespace SeaBattle
                         if (seilingShip != null)
                         {
                             seilingShip = null;
-                            DrawFleet(playerFleet, true);
+                            SetAndDrawFleet(playerFleet, true);
                         } else
                         {
                             var xOfCell = LeftXCellIndex(x);
@@ -191,7 +192,7 @@ namespace SeaBattle
                                 return;
                             seilingShip = leftCells[xOfCell, yOfCell].Ship;
                             foreach (var cell in Ship.PreBody(seilingShip))
-                                leftCells[cell.X, cell.Y].SetNewType(CellType.SeilingShip);
+                                leftCells[cell.X, cell.Y].SetNewType(CellType.SailingShip);
                         }
                     }
                     else if (!shipSettingRegime && IsPointInRightField(x, y))
@@ -203,12 +204,12 @@ namespace SeaBattle
                     else if (shipSettingRegime && IsPointInRightField(x, y))
                     {
                         var pos = new Random().Next(30);
-                        if (pos == 1) globalGameInfo.Text = "Нехуй тыкать - расставляй по-человечески и играй.";
+                        if (pos == 1) globalGameInfo.Text = Resources.Excess_clicks_info;
                     }
                     else if (!shipSettingRegime && IsPointInLeftField(x, y))
                     {
                         var pos = new Random().Next(20);
-                        if (pos == 1) globalGameInfo.Text = "Вот ведь хуяшечки: столько бестолкового движения в одном месте.";
+                        if (pos == 1) globalGameInfo.Text = Resources.Excess_left_field_clicks_info;
                     }
                     break;
                 case MouseButtons.Right:
@@ -217,9 +218,9 @@ namespace SeaBattle
                         foreach(var cell in Ship.PreBody(seilingShip))
                             leftCells[cell.X, cell.Y].SetNewType(CellType.Sea);
                         seilingShip.Reverse();
-                        seilingShip.Seil(FindSuitablePlace(new Point(LeftXCellIndex(x), LeftYCellIndex(y))));
+                        seilingShip.Sail(FindSuitablePlace(new Point(LeftXCellIndex(x), LeftYCellIndex(y))));
                         foreach (var cell in Ship.PreBody(seilingShip))
-                            leftCells[cell.X, cell.Y].SetNewType(CellType.SeilingShip);
+                            leftCells[cell.X, cell.Y].SetNewType(CellType.SailingShip);
                         Invalidate();
                     }
                     break;
@@ -280,9 +281,10 @@ namespace SeaBattle
 
         private void ChangeSizes()
         {
-            var byWidth = ClientSize.Width / widthFieldKoeff;
-            var byHeight = ClientSize.Height / heightFieldKoeff;
+            var byWidth = ClientSize.Width / WidthFieldCoefficient;
+            var byHeight = ClientSize.Height / HeightFieldCoefficient;
             cellSize = Math.Min(byWidth, byHeight);
+            // ReSharper disable once PossibleLossOfFraction
             markPen.Width = cellSize / 6;
         }
 
@@ -384,9 +386,9 @@ namespace SeaBattle
             var rightWidth = ClientSize.Width - padding / 2 - middleX2;
             var leftWidth2 = middleX2 - middleX1;
 
-            g.FillRectangle(LeftBackgroundColour, leftX, upY, leftWidth, heightY);
-            g.FillRectangle(RightBackgroundColour, middleX2, upY, rightWidth, heightY);
-            g.FillRectangle(RightBackgroundColour, middleX1, middleY, leftWidth2, heightY / 2);
+            g.FillRectangle(leftBackgroundColour, leftX, upY, leftWidth, heightY);
+            g.FillRectangle(rightBackgroundColour, middleX2, upY, rightWidth, heightY);
+            g.FillRectangle(rightBackgroundColour, middleX1, middleY, leftWidth2, heightY / 2);
         }
 
         private Point GetRightFieldUpLeft() 
@@ -414,7 +416,7 @@ namespace SeaBattle
                     break;                    
                 case CellType.Sea:
                     break;
-                case CellType.SeilingShip:
+                case CellType.SailingShip:
                     g.FillRectangle(Brushes.LightGray, x, y, cellSize, cellSize);
                     g.DrawRectangle(new Pen(Brushes.White, 1), x + cellBorder, y + cellBorder
                         , cellSize - 2 * cellBorder, cellSize - 2 * cellBorder);

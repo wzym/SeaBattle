@@ -29,18 +29,27 @@ namespace SeaBattle
         private List<Point> GetMaxLengthShipPoints()
         {
             var size = LongestShipLength();
+            if (size == 1)
+            {
+                var result = new List<Point>();
+                foreach(var cell in Model)                
+                    if (cell.Type == CellType.Sea)
+                        result.Add(new Point(cell.X, cell.Y));                
+                return result;
+            }
             var ofHorizontal = new List<Point>();
             var ofVertical = new List<Point>();
             foreach (var startPosition in GameModel.WorkingCells(Model))
             {
-                var horizontal = new Ship(new Point(startPosition.X, startPosition.Y), size);
-                var vertical = new Ship(new Point(startPosition.X, startPosition.Y), size, false);
-                if (!ofHorizontal.Contains(new Point(startPosition.X, startPosition.Y)) && IsVariantPossible(horizontal))
+                var horizontal = new Ship(startPosition, size);
+                var vertical = new Ship(startPosition, size, false);
+                if (IsVariantPossible(horizontal))                    
                     ofHorizontal.AddRange(Ship.PreBody(horizontal));
-                if (!ofVertical.Contains(new Point(startPosition.X, startPosition.Y)) && IsVariantPossible(vertical))
+                if (IsVariantPossible(vertical))
                     ofVertical.AddRange(Ship.PreBody(vertical));
             }
-
+            ofHorizontal = ofHorizontal.Distinct().ToList();
+            ofVertical = ofVertical.Distinct().ToList();
             var intersect = ofHorizontal.Intersect(ofVertical).ToList();
             if (intersect.Count != 0) return intersect;
             ofHorizontal.AddRange(ofVertical);

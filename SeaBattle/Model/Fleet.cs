@@ -14,7 +14,7 @@ namespace SeaBattle
             Ships.Add(ship);
         }
 
-        internal void SetShips(IEnumerable<Ship> fleet)
+        internal void AddToFleet(IEnumerable<Ship> fleet)
         {
             Ships = new List<Ship>();
             foreach (var ship in fleet)

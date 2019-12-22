@@ -77,7 +77,7 @@ namespace SeaBattle
                 Field[cell.X, cell.Y].SetNewType(CellType.Bomb);            
         }
 
-        internal void SetFleet(IEnumerable<Ship> fleet)
+        internal void AddToField(IEnumerable<Ship> fleet)
         {
             ClearField();
             foreach(var ship in fleet)            

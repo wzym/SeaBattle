@@ -32,8 +32,8 @@ namespace SeaBattle
 
         private void SetFleetChosenByPlayer(IEnumerable<Ship> fleet)
         {
-            status.Player.Fleet.SetShips(fleet);
-            status.Player.SetFleet(fleet);
+            status.Player.Fleet.AddToFleet(fleet);
+            status.Player.AddToField(fleet);
             status.DefineActivity();
             if (status.Active == status.Rival)
             {
@@ -50,7 +50,7 @@ namespace SeaBattle
             status = new GameStatus();
             status.GameEnd += WorkOnGameEnd;
             view.Clear();
-            view.DrawFleet(status.Player.Fleet.Ships, true);
+            view.SetAndDrawFleet(status.Player.Fleet.Ships, true);
             view.SetNewGameInfo(status.Player.Fleet.ToString(), status.Rival.Fleet.ToString());            
         }
 

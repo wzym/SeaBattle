@@ -2,6 +2,6 @@
 {
     internal enum CellType
     {
-        Sea, Ship, Bomb, Exploded, SeilingShip
+        Sea, Ship, Bomb, Exploded, SailingShip
     }
 }
