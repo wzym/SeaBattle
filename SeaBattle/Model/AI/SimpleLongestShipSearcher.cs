@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace SeaBattle
 {
-    internal class Tg2 : TurnGenerator
+    internal class SimpleLongestShipSearcher : TurnGenerator
     {
         protected override List<Point> GetSearchingTurns()
         {
@@ -18,11 +18,6 @@ namespace SeaBattle
                     RemoveNotLargestCells(cells, cell.X, cell.Y);
 
             return cells.Cast<Point>().Where(p => p != wrongPoint).ToList();
-        }
-
-        protected override List<Point> GetFinishingOffTurns()
-        {
-            return GetSearchingTurns();
         }
         
         private void RemoveNotLargestCells(Point[,] cells, int x, int y)

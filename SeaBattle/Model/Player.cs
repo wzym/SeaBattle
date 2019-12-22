@@ -22,7 +22,7 @@ namespace SeaBattle
         internal Player(bool isArtificial)
         {
             IsArtificial = isArtificial;
-            if (isArtificial) TurnGenerator = new Tg3();
+            if (isArtificial) TurnGenerator = new LongestShipInTwoDimensionsSearcher();
             Fleet = new Fleet();
             Field = new GameCell[GameModel.HeightOfField + 2, GameModel.HeightOfField + 2];
             InitializeField();
@@ -48,7 +48,6 @@ namespace SeaBattle
 
         private void InitializeFleet()
         {
-            //ClearField()
             var generator = new FleetGenerator(Field);
             foreach (var (length, shipsAmount) in GameModel.FleetParams)
                 for (var i = 0; i < shipsAmount; i++)

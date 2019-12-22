@@ -8,10 +8,10 @@ namespace SeaBattle
     internal abstract class TurnGenerator
     {
         protected readonly GameCell[,] Model;
-        protected PresumedShip PresumedShip;
+        private PresumedShip presumedShip;
         private readonly Random rnd = new Random();
         private readonly IEnumerator<Point> enumerator;
-        private Dictionary<int, int> PresumedFleet { get; set; }
+        private Dictionary<int, int> presumedFleet;
         
         internal TurnGenerator()
         {
@@ -23,13 +23,13 @@ namespace SeaBattle
 
         private void SetPresumedFleet()
         {
-            PresumedFleet = new Dictionary<int, int>();
+            presumedFleet = new Dictionary<int, int>();
             foreach (var (length, amount) in GameModel.FleetParams)
-                PresumedFleet[length] = amount;
+                presumedFleet[length] = amount;
         }
 
         protected int LongestShipLength()
-            => PresumedFleet
+            => presumedFleet
                 .Where(e => e.Value > 0)
                 .Max(e => e.Key);
 
@@ -71,11 +71,12 @@ namespace SeaBattle
         }
         
         private List<Point> GetTurns()
-            => PresumedShip != null ? GetFinishingOffTurns() : GetSearchingTurns();
+            => presumedShip != null ? GetFinishingOffTurns() : GetSearchingTurns();
 
         protected abstract List<Point> GetSearchingTurns();
 
-        protected abstract List<Point> GetFinishingOffTurns();
+        private List<Point> GetFinishingOffTurns()
+            => presumedShip.GetFinishOffTurns().ToList();
         
         internal void ReportAbtDeath(Ship ship)
         {
@@ -86,9 +87,9 @@ namespace SeaBattle
 
         private void DeleteShip(Ship ship)
         {
-            PresumedFleet[ship.Size]--;
-            if (PresumedFleet[ship.Size] <= 0) 
-                PresumedFleet.Remove(ship.Size);
+            presumedFleet[ship.Size]--;
+            if (presumedFleet[ship.Size] <= 0) 
+                presumedFleet.Remove(ship.Size);
         }
         
         protected bool IsVariantPossible(Ship ship)
@@ -98,10 +99,10 @@ namespace SeaBattle
         {
             Model[result.X, result.Y].SetNewType(result.Type);
             if (result.Type != CellType.Exploded) return;
-            PresumedShip?.ReportOnHit(new Point(result.X, result.Y));
-            if (result.Ship.IsDead) PresumedShip = null;
-            else if (PresumedShip == null) 
-                PresumedShip = new PresumedShip(new Point(result.X, result.Y), Model);
+            presumedShip?.ReportOnHit(new Point(result.X, result.Y));
+            if (result.Ship.IsDead) presumedShip = null;
+            else if (presumedShip == null) 
+                presumedShip = new PresumedShip(new Point(result.X, result.Y), Model);
         }
     }
 }

@@ -4,11 +4,8 @@ using System.Linq;
 
 namespace SeaBattle
 {
-    internal class Tg3 : TurnGenerator
+    internal class LongestShipInTwoDimensionsSearcher : TurnGenerator
     {
-        protected override List<Point> GetFinishingOffTurns()
-            => PresumedShip.GetFinishOffTurns().ToList();
-
         protected override List<Point> GetSearchingTurns()
         {
             var size = LongestShipLength();
