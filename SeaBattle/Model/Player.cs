@@ -15,7 +15,7 @@ namespace SeaBattle
         private Point currentTurn;        
         internal Point CurrentTurn
         {
-            get => IsArtificial ? TurnGenerator.Next() : currentTurn;
+            get => IsArtificial ? TurnGenerator.NextTurn() : currentTurn;
             set => currentTurn = value;
         }
 

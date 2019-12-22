@@ -114,4 +114,19 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="Ship_setting_instruction" xml:space="preserve">
+    <value>Крайние клавиши мыши - выбрать, установить и повернуть корабль.</value>
+  </data>
+  <data name="MainWindow_before_game" xml:space="preserve">
+    <value>Start?</value>
+  </data>
+  <data name="Wrong_Ship_Setting" xml:space="preserve">
+    <value>Неверная расстановка кораблей.</value>
+  </data>
+  <data name="Excess_clicks_info" xml:space="preserve">
+    <value>Нехуй тыкать - расставляй по-человечески и играй.</value>
+  </data>
+  <data name="Excess_left_field_clicks_info" xml:space="preserve">
+    <value>Вот ведь хуяшечки: столько бестолкового движения в одном месте.</value>
+  </data>
 </root>

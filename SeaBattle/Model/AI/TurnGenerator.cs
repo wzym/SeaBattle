@@ -9,15 +9,16 @@ namespace SeaBattle
     {
         protected readonly GameCell[,] Model;
         protected PresumedShip PresumedShip;
-        protected readonly Random Rnd = new Random();
-        protected IEnumerator<Point> Enumerator;
-        protected Dictionary<int, int> PresumedFleet { get; private set; }
+        private readonly Random rnd = new Random();
+        private readonly IEnumerator<Point> enumerator;
+        private Dictionary<int, int> PresumedFleet { get; set; }
         
         internal TurnGenerator()
         {
             Model = new GameCell[GameModel.WidthOfField + 2, GameModel.HeightOfField + 2];
             InitializeModel();
             SetPresumedFleet();
+            enumerator = GetEnumerator();
         }
 
         private void SetPresumedFleet()
@@ -52,14 +53,55 @@ namespace SeaBattle
             }
         }
 
-        internal abstract void ReturnResultBack(GameCell result);
+        internal Point NextTurn()
+            => enumerator.MoveNext() ? 
+                enumerator.Current : 
+                throw new Exception("У ума ходы кончились.");
 
-        internal abstract void ReportAbtDeath(Ship ship);
+        private IEnumerator<Point> GetEnumerator()
+        {
+            while(true)
+            {
+                var turns = GetTurns();
+                if (turns.Count == 0)
+                    yield break;
+                var index = rnd.Next(turns.Count);                
+                yield return turns[index];
+            }   
+        }
+        
+        private List<Point> GetTurns()
+            => PresumedShip != null ? GetFinishingOffTurns() : GetSearchingTurns();
 
-        internal Point Next()
-        {            
-            if (!Enumerator.MoveNext()) throw new Exception("У ума ходы кончились.");            
-            return Enumerator.Current;
+        protected abstract List<Point> GetSearchingTurns();
+
+        protected abstract List<Point> GetFinishingOffTurns();
+        
+        internal void ReportAbtDeath(Ship ship)
+        {
+            foreach (var cellBuff in Ship.PreBuffer(ship))
+                Model[cellBuff.X, cellBuff.Y].SetNewType(CellType.Bomb);
+            DeleteShip(ship);
+        }
+
+        private void DeleteShip(Ship ship)
+        {
+            PresumedFleet[ship.Size]--;
+            if (PresumedFleet[ship.Size] <= 0) 
+                PresumedFleet.Remove(ship.Size);
+        }
+        
+        protected bool IsVariantPossible(Ship ship)
+            => Ship.PreBody(ship).All(point => Model[point.X, point.Y].Type == CellType.Sea);
+
+        internal void ReturnResultBack(GameCell result)
+        {
+            Model[result.X, result.Y].SetNewType(result.Type);
+            if (result.Type != CellType.Exploded) return;
+            PresumedShip?.ReportOnHit(new Point(result.X, result.Y));
+            if (result.Ship.IsDead) PresumedShip = null;
+            else if (PresumedShip == null) 
+                PresumedShip = new PresumedShip(new Point(result.X, result.Y), Model);
         }
     }
 }
