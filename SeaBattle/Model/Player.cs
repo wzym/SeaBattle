@@ -22,7 +22,7 @@ namespace SeaBattle
         internal Player(bool isArtificial)
         {
             IsArtificial = isArtificial;
-            if (isArtificial) TurnGenerator = new LongestShipInTwoDimensionsSearcher();
+            if (isArtificial) TurnGenerator = new TurnGenerator();
             Fleet = new Fleet();
             Field = new GameCell[GameModel.HeightOfField + 2, GameModel.HeightOfField + 2];
             InitializeField();
@@ -62,8 +62,6 @@ namespace SeaBattle
         private void LeaveOnlyShipsOnField()
         {
             foreach (var cell in GameModel.WorkingCells(Field))
-                //if (cell.Type != CellType.Ship)
-                //    cell.SetNewType(CellType.Sea);
                 if (Field[cell.X, cell.Y].Type != CellType.Ship)
                     Field[cell.X, cell.Y].SetNewType(CellType.Sea);
         }
@@ -87,7 +85,6 @@ namespace SeaBattle
         private void ClearField()
         {
             foreach (var cell in GameModel.WorkingCells(Field))
-                //cell.SetNewType(CellType.Sea);
                 Field[cell.X, cell.Y].SetNewType(CellType.Sea);
         }
 

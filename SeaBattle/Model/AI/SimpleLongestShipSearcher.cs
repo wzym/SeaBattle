@@ -6,7 +6,7 @@ namespace SeaBattle
 {
     internal class SimpleLongestShipSearcher : TurnGenerator
     {
-        protected override List<Point> GetSearchingTurns()
+        protected List<Point> GetSearchingTurns()
         {
             var wrongPoint = new Point(-1, -1);
             var cells = new Point[Model.GetLength(0), Model.GetLength(1)];
