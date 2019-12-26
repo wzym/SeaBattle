@@ -8,10 +8,10 @@ namespace SeaBattle
     internal class PresumedShip
     {
         private readonly LinkedList<Point> body;
-        private readonly GameCell[,] fieldModel;
+        private readonly Field fieldModel;
         private bool? isHorizontal;
 
-        internal PresumedShip(Point firstKnown, GameCell[,] model)
+        internal PresumedShip(Point firstKnown, Field model)
         {
             fieldModel = model;
             body = new LinkedList<Point>();
@@ -21,9 +21,9 @@ namespace SeaBattle
         internal IEnumerable<Point> GetFinishOffTurns()
         {
             if (body.Count == 1) return FourNeighbors(body.First.Value)
-                .Where(c => fieldModel[c.X, c.Y].Type != CellType.Bomb);
+                .Where(c => fieldModel[c].Type != CellType.Bomb);
             if (body.Count > 1) return TwoNeighbors(body.First.Value, body.Last.Value)
-                .Where(c => fieldModel[c.X, c.Y].Type != CellType.Bomb);
+                .Where(c => fieldModel[c].Type != CellType.Bomb);
             throw new Exception("Mind hasn't found neighbor cells of the ship.");
         }
 

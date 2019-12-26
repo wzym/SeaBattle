@@ -1,6 +1,6 @@
 ﻿namespace SeaBattle
 {
-    internal struct GameCell
+    public struct GameCell
     {
         private Ship ship;
         internal int X { get; }
@@ -31,8 +31,6 @@
         }
 
         public override string ToString()
-        {
-            return Type.ToString();
-        }
+            => Type.ToString();        
     }
 }

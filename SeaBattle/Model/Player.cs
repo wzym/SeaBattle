@@ -7,7 +7,7 @@ namespace SeaBattle
     internal class Player
     {
         internal bool IsArtificial { get; }
-        internal GameCell[,] Field { get; }
+        internal Field Field { get; }
         internal Fleet Fleet { get; }
         internal bool IsLost => Fleet.Health == 0;
         internal TurnGenerator TurnGenerator { get; }
@@ -24,7 +24,7 @@ namespace SeaBattle
             IsArtificial = isArtificial;
             if (isArtificial) TurnGenerator = new TurnGenerator();
             Fleet = new Fleet();
-            Field = new GameCell[GameModel.HeightOfField + 2, GameModel.HeightOfField + 2];
+            Field = new Field();
             InitializeField();
             InitializeFleet();
         }
@@ -48,7 +48,7 @@ namespace SeaBattle
 
         private void InitializeFleet()
         {
-            var generator = new FleetGenerator(Field);
+            var generator = new FleetGenerator(Field.model);
             foreach (var (length, shipsAmount) in GameModel.FleetParams)
                 for (var i = 0; i < shipsAmount; i++)
                 {
@@ -61,17 +61,18 @@ namespace SeaBattle
 
         private void LeaveOnlyShipsOnField()
         {
-            foreach (var cell in GameModel.WorkingCells(Field))
-                if (Field[cell.X, cell.Y].Type != CellType.Ship)
-                    Field[cell.X, cell.Y].SetNewType(CellType.Sea);
+            foreach (var cell in Field.GetWorkingCells(Field))
+                if (cell.Type != CellType.Ship)
+                    Field.SetNewType(cell.X, cell.Y, CellType.Sea);
         }
 
         private void SetShip(Ship ship)
         {
             foreach (var cell in Ship.PreBody(ship))
-                Field[cell.X, cell.Y].Ship = ship;
+                Field.SetShip(cell.X, cell.Y, ship);
+//                Field[cell].Ship = ship;
             foreach (var cell in Ship.PreBuffer(ship))
-                Field[cell.X, cell.Y].SetNewType(CellType.Bomb);            
+                Field.SetNewType(cell.X, cell.Y, CellType.Bomb);
         }
 
         internal void AddToField(IEnumerable<Ship> fleet)
@@ -84,8 +85,8 @@ namespace SeaBattle
 
         private void ClearField()
         {
-            foreach (var cell in GameModel.WorkingCells(Field))
-                Field[cell.X, cell.Y].SetNewType(CellType.Sea);
+            foreach (var cell in Field.GetWorkingCells(Field))
+                Field.SetNewType(cell.X, cell.Y, CellType.Sea);
         }
 
         public void ReturnResultBack(GameCell cell)

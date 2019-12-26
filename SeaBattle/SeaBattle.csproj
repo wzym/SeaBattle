@@ -73,6 +73,7 @@
     <Compile Include="Model\AI\PresumedShip.cs" />
     <Compile Include="Model\AI\SimpleLongestShipSearcher.cs" />
     <Compile Include="Model\AI\TurnGenerator.cs" />
+    <Compile Include="Model\Field.cs" />
     <Compile Include="Model\Fleet.cs" />
     <Compile Include="Model\GameCell.cs" />
     <Compile Include="Model\GameModel.cs" />

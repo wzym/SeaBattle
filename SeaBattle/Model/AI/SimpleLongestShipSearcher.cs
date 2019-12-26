@@ -9,11 +9,11 @@ namespace SeaBattle
         protected List<Point> GetSearchingTurns()
         {
             var wrongPoint = new Point(-1, -1);
-            var cells = new Point[Model.GetLength(0), Model.GetLength(1)];
+            var cells = new Point[Model.Width, Model.Height];
             foreach (var cell in Model)
                 cells[cell.X, cell.Y] = cell.Type == CellType.Sea ? new Point(cell.X, cell.Y) : wrongPoint;
 
-            foreach (var  cell in Model)
+            foreach (var cell in Model)
                 if (cell.Type == CellType.Exploded)
                     RemoveNotLargestCells(cells, cell.X, cell.Y);
 

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 
 namespace SeaBattle
@@ -66,19 +65,17 @@ namespace SeaBattle
                 var active = status.Active;
                 var passive = status.Passive;
                 var turn = status.Active.CurrentTurn;
-                var cell = status.Passive.Field[turn.X, turn.Y];
+                var cell = status.Passive.Field[turn];
 
                 switch (cell.Type)
                 {
-                    case CellType.Sea:
-                        //cell.SetNewType(CellType.Bomb);
-                        status.Passive.Field[turn.X, turn.Y].SetNewType(CellType.Bomb);
+                    case CellType.Sea:                        
+                        status.Passive.Field.SetNewType(turn, CellType.Bomb);
                         status.InvertActivity();
                         break;
                     case CellType.Ship:
-                        var ship = cell.Ship;
-                        //cell.SetNewType(CellType.Exploded);
-                        status.Passive.Field[turn.X, turn.Y].SetNewType(CellType.Exploded);
+                        var ship = cell.Ship;                        
+                        status.Passive.Field.SetNewType(turn, CellType.Exploded);
                         ship.SetDamage();
                         if (ship.IsDead)
                         {
@@ -94,28 +91,18 @@ namespace SeaBattle
                         break;
                     default:
                         throw new ArgumentOutOfRangeException();
-                }
-                //active.ReturnResultBack(cell);
+                }                
                 active.ReturnResultBack(passive.Field[turn.X, turn.Y]);
-                ShowField(passive.Field, active == status.Rival);
+                ShowField(passive.Field, active == status.Rival);//
                 if (!status.Active.IsArtificial) break;                
             }
         }
 
-        private void ShowField(GameCell[,] field, bool isLeftField)
+        private void ShowField(Field field, bool isLeftField)
         {
             var shouldShowCell = isLeftField ?
                 (Func<CellType, bool>) (_ => true) : c => c != CellType.Ship;
-            //view.DrawCells(WorkingCells(field).Where(c => shouldShowCell(c.Type)), isLeftField);
-            view.DrawCells(WorkingCells(field).Select(p => field[p.X, p.Y]).Where(c => shouldShowCell(c.Type)), isLeftField);
-        }
-
-        internal static IEnumerable<Point> WorkingCells(GameCell[,] field)
-        {
-            for (var y = 1; y < field.GetLength(1) - 1; y++)
-                for (var x = 1; x < field.GetLength(0) - 1; x++)
-                    //yield return field[x, y];
-                    yield return new Point(x, y);
+            view.DrawCells(Field.GetWorkingCells(field).Where(c => shouldShowCell(c.Type)), isLeftField);
         }
     }
 }

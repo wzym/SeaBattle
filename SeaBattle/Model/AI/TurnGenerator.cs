@@ -2,23 +2,22 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using System.Xml;
 
 namespace SeaBattle
 {
     internal class TurnGenerator
     {
-        protected readonly GameCell[,] Model;
+        protected readonly Field Model;
         private PresumedShip presumedShip;
         private readonly Random rnd = new Random();
         private readonly IEnumerator<Point> enumerator;
         private Dictionary<int, int> presumedFleet;
-        private List<Point> notProcessedTurns; 
+        private List<Point> processingTurns;
+        private int maxShipLength;
 
         internal TurnGenerator()
         {
-            Model = new GameCell[GameModel.WidthOfField + 2, GameModel.HeightOfField + 2];
-            InitializeModel();
+            Model = new Field();           
             SetPresumedFleet();
             enumerator = GetEnumerator();
             FormNotProcessedTurns();
@@ -36,26 +35,6 @@ namespace SeaBattle
                 .Where(e => e.Value > 0)
                 .Max(e => e.Key);
 
-        private void InitializeModel()
-        {
-            for (var y = 1; y < Model.GetLength(1) - 1; y++)
-                for (var x = 1; x < Model.GetLength(0) - 1; x++)
-                    Model[x, y] = new GameCell(CellType.Sea, x, y);
-
-            for (var y = 0; y < Model.GetLength(1); y++)
-            {
-                Model[0, y] = new GameCell(CellType.Bomb, 0, y);
-                Model[Model.GetLength(0) - 1, y] = 
-                    new GameCell(CellType.Bomb, Model.GetLength(0) - 1, y);
-            }
-            for (var x = 1; x < Model.GetLength(0) - 1; x++)
-            {
-                Model[x, 0] = new GameCell(CellType.Bomb, x, 0);
-                Model[x, Model.GetLength(1) - 1] = 
-                    new GameCell(CellType.Bomb, x, Model.GetLength(1) - 1);
-            }
-        }
-
         internal Point NextTurn()
             => enumerator.MoveNext() ? 
                 enumerator.Current : 
@@ -72,7 +51,7 @@ namespace SeaBattle
         }
 
         private List<Point> GetTurns()
-            => presumedShip != null ? GetFinishingOffTurns() : notProcessedTurns;//GetSearchingTurns();
+            => presumedShip != null ? GetFinishingOffTurns() : GetSearchingTurns(); //processingTurns;//GetSearchingTurns();
 
         private List<Point> GetFinishingOffTurns()
             => presumedShip.GetFinishOffTurns().ToList();
@@ -80,16 +59,19 @@ namespace SeaBattle
         internal void ReportAbtDeath(Ship deadShip)
         {
             foreach (var cellBuff in Ship.PreBuffer(deadShip))
-                Model[cellBuff.X, cellBuff.Y].SetNewType(CellType.Bomb);
+                Model.SetNewType(cellBuff, CellType.Bomb);
+
             DeleteShip(deadShip);
-            if (presumedFleet.Count > 0 && deadShip.Size > LongestShipLength()) FormNotProcessedTurns();
+            if (presumedFleet.Count > 0 
+                && deadShip.Size > LongestShipLength()) 
+                FormNotProcessedTurns();
             else ClearNotProcessTurns();
         }
 
         private void ClearNotProcessTurns()
         {
-            notProcessedTurns = notProcessedTurns
-                .Where(t => Model[t.X, t.Y].Type == CellType.Sea).ToList();
+            processingTurns = processingTurns
+                .Where(t => Model[t].Type == CellType.Sea).ToList();
         }
 
         private void FormNotProcessedTurns()
@@ -98,20 +80,20 @@ namespace SeaBattle
             var size = mask.Length;
             if (size == 1)
             {
-                notProcessedTurns = NotCheckedCells;
+                processingTurns = NotCheckedCells;
                 return;
             }
-            notProcessedTurns = new List<Point>();
+            processingTurns = new List<Point>();
             for (var y = 1; y <= GameModel.HeightOfField; y++)
             {
-                var restY = (y - 1) % size;
+                var yMaskIndex = (y - 1) % size;
                 for (var x = 1; x <= GameModel.WidthOfField; x++)
                 {
-                    var restX = (x - 1) % size;
+                    var xMaskIndex = (x - 1) % size;
 
-                    if (mask.Contains(new Point(restX, restY))
+                    if (mask.Contains(new Point(xMaskIndex, yMaskIndex))
                         && Model[x, y].Type == CellType.Sea)
-                        notProcessedTurns.Add(new Point(x, y));
+                        processingTurns.Add(new Point(x, y));
                 }
             }
         }
@@ -124,11 +106,12 @@ namespace SeaBattle
         }
 
         private bool IsVariantPossible(Ship ship)
-            => Ship.PreBody(ship).All(point => Model[point.X, point.Y].Type == CellType.Sea);
+            => Ship.PreBody(ship)
+                .All(point => Model[point].Type == CellType.Sea);
 
         internal void ReturnResultBack(GameCell result)
-        {
-            Model[result.X, result.Y].SetNewType(result.Type);
+        {            
+            Model.SetNewType(result.X, result.Y, result.Type);
             ClearNotProcessTurns();//optimize
             if (result.Type != CellType.Exploded) return;
             presumedShip?.ReportOnHit(new Point(result.X, result.Y));
@@ -157,7 +140,7 @@ namespace SeaBattle
         private List<Point> GetShipSearchTurns(int size, bool isHorizontal = true)
         {
             var result = new List<Point>();
-            foreach (var cell in GameModel.WorkingCells(Model))
+            foreach (var cell in Field.GetWorkingCellsIndexes(Model))
             {
                 var ship = new Ship(cell, size, isHorizontal);
                 if (IsVariantPossible(ship))
@@ -170,16 +153,16 @@ namespace SeaBattle
         private Point[] GetMaskCell()
         {
             var size = LongestShipLength();
+            var xValues = new List<int>(size);
+            var yValues = new List<int>(size);
+
+            InitializeMask(size, xValues, yValues);
+            return FillMaskRandomly(size, xValues, yValues);
+        }
+
+        private Point[] FillMaskRandomly(int size, List<int> xValues, List<int> yValues)
+        {
             var result = new Point[size];
-            var xValues = new List<int>();
-            var yValues = new List<int>();
-
-            for (var i = 0; i < size; i++)
-            { 
-                xValues.Add(i);
-                yValues.Add(i);
-            }
-
             for (var i = 0; i < size; i++)
             {
                 var x = GetRandomElement(xValues);
@@ -188,16 +171,25 @@ namespace SeaBattle
                 xValues.Remove(x);
                 yValues.Remove(y);
             }
+
             return result;
         }
-        
+
+        private static void InitializeMask(int size, ICollection<int> xValues, ICollection<int> yValues)
+        {
+            for (var i = 0; i < size; i++)
+            {
+                xValues.Add(i);
+                yValues.Add(i);
+            }
+        }
+
         private T GetRandomElement<T>(IReadOnlyList<T> sequence)
             => sequence[rnd.Next(sequence.Count)];
         
-        
         private List<Point> NotCheckedCells
-            => GameModel.WorkingCells(Model)
-                .Where(p => Model[p.X, p.Y].Type == CellType.Sea)
+            => Field.GetWorkingCellsIndexes(Model)
+                .Where(p => Model[p].Type == CellType.Sea)
                 .ToList();
     }
 }
