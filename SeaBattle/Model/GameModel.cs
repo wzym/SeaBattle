@@ -92,7 +92,7 @@ namespace SeaBattle
                     default:
                         throw new ArgumentOutOfRangeException();
                 }                
-                active.ReturnResultBack(passive.Field[turn.X, turn.Y]);
+                active.ReturnResultBack(passive.Field[turn]);
                 ShowField(passive.Field, active == status.Rival);//
                 if (!status.Active.IsArtificial) break;                
             }

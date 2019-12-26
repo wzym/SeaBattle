@@ -7,10 +7,10 @@ namespace SeaBattle
 {
     internal class FleetGenerator
     {
-        private readonly GameCell[,] field;
+        private readonly Field field;
         private static readonly Random Rnd = new Random();
 
-        public FleetGenerator(GameCell[,] field)
+        public FleetGenerator(Field field)
         {
             this.field = field;
         }
@@ -26,14 +26,14 @@ namespace SeaBattle
         private List<Ship> FormVariants(int decksAmount)
         {
             var result = new List<Ship>();
-            for(var y = 0; y < field.GetLength(1); y++)
-                for(var x = 0; x <= field.GetLength(0) - decksAmount; x++)
+            for(var y = 0; y < field.Height; y++)
+                for(var x = 0; x <= field.Width - decksAmount; x++)
                 {
                     var variant = new Ship(new Point(x, y), decksAmount);
                     if (IsGood(variant)) result.Add(variant);                    
                 }
-            for(var y = 0; y < field.GetLength(1) - decksAmount; y++)
-                for(var x = 0; x < field.GetLength(0); x++)
+            for(var y = 0; y < field.Height - decksAmount; y++)
+                for(var x = 0; x < field.Width; x++)
                 {
                     var variant = new Ship(new Point(x, y), decksAmount, false);
                     if (IsGood(variant)) result.Add(variant);

@@ -13,14 +13,14 @@ namespace SeaBattle
         private readonly IEnumerator<Point> enumerator;
         private Dictionary<int, int> presumedFleet;
         private List<Point> processingTurns;
-        private int maxShipLength;
+        protected int maxShipLength;
 
         internal TurnGenerator()
         {
             Model = new Field();           
             SetPresumedFleet();
             enumerator = GetEnumerator();
-            FormNotProcessedTurns();
+            FormNotProcessedTurns();            
         }
 
         private void SetPresumedFleet()
@@ -28,6 +28,7 @@ namespace SeaBattle
             presumedFleet = new Dictionary<int, int>();
             foreach (var (length, amount) in GameModel.FleetParams)
                 presumedFleet[length] = amount;
+            maxShipLength = LongestShipLength();
         }
 
         protected int LongestShipLength()
@@ -63,7 +64,7 @@ namespace SeaBattle
 
             DeleteShip(deadShip);
             if (presumedFleet.Count > 0 
-                && deadShip.Size > LongestShipLength()) 
+                && deadShip.Size > maxShipLength) 
                 FormNotProcessedTurns();
             else ClearNotProcessTurns();
         }
@@ -101,8 +102,12 @@ namespace SeaBattle
         private void DeleteShip(Ship ship)
         {
             presumedFleet[ship.Size]--;
-            if (presumedFleet[ship.Size] <= 0) 
+            if (presumedFleet[ship.Size] <= 0)
+            {
                 presumedFleet.Remove(ship.Size);
+                if (ship.Size == maxShipLength && presumedFleet.Count > 0)
+                    maxShipLength = LongestShipLength();
+            }                
         }
 
         private bool IsVariantPossible(Ship ship)
@@ -122,7 +127,7 @@ namespace SeaBattle
 
         private List<Point> GetSearchingTurns()
         {
-            var size = LongestShipLength();
+            var size = maxShipLength;
             if (size == 1)
                 return NotCheckedCells;
 
@@ -152,7 +157,7 @@ namespace SeaBattle
 
         private Point[] GetMaskCell()
         {
-            var size = LongestShipLength();
+            var size = maxShipLength;
             var xValues = new List<int>(size);
             var yValues = new List<int>(size);
 

@@ -48,7 +48,7 @@ namespace SeaBattle
 
         private void InitializeFleet()
         {
-            var generator = new FleetGenerator(Field.model);
+            var generator = new FleetGenerator(Field);
             foreach (var (length, shipsAmount) in GameModel.FleetParams)
                 for (var i = 0; i < shipsAmount; i++)
                 {

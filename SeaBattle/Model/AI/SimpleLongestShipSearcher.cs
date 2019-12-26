@@ -23,7 +23,7 @@ namespace SeaBattle
         private void RemoveNotLargestCells(Point[,] cells, int x, int y)
         {
             var wrongPoint = new Point(-1, -1);
-            var buffDistance = LongestShipLength() - 1;
+            var buffDistance = maxShipLength - 1;
 
             for (var i = 0; i < buffDistance; i++)
             {

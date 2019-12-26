@@ -8,7 +8,7 @@ namespace SeaBattle
 {
     public class Field : IEnumerable<GameCell>
     {
-        public readonly GameCell[,] model;//
+        private readonly GameCell[,] model;//
         
         internal int Height => model.GetLength(1);
         internal int Width => model.GetLength(0);
