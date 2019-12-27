@@ -16,22 +16,24 @@ namespace SeaBattle
         private const int WidthFontCoefficient = 50;
         private const int HeightFontCoefficient = 28;
         private const int MarkPenCoefficient = 6;
-        private readonly Brush leftBackground = Brushes.GreenYellow;
-        private readonly Brush rightBackground = Brushes.BlueViolet;
-        private readonly Brush winBackground = Brushes.LightGreen;
-        private readonly Brush loseBackground = Brushes.DarkRed;
+        private readonly Color leftBackground = Color.FromArgb(0x00, 0xBC, 0xD4);
+        private readonly Color rightBackground = Color.FromArgb(0xFF, 0xEB, 0x3B);
+        private readonly Color darkGray = Color.FromArgb(0x42, 0x42, 0x42);
+        private readonly Color lightGray = Color.FromArgb(100, 0x42, 0x42, 0x42);
+        private readonly Color whiteTextBack = Color.FromArgb(0xEE, 0xEE, 0xEE);
+        private readonly Color whiteFieldBack = Color.FromArgb(0xFF, 0xFE, 0xFE);
 
         internal event Action<Point, MouseEventArgs> TurnDone;        
         internal event Action RestartGame;
         internal event Action<IEnumerable<Ship>> FleetIsChosen;
 
-        private Brush leftBackgroundColour;
-        private Brush rightBackgroundColour;
+        private Brush leftBackgroundBrush;
+        private Brush rightBackgroundBrush;
         private int cellSize;
         private readonly Field leftCells = new Field();
         private readonly Field rightCells = new Field();
-        private readonly Pen borderPen = new Pen(Brushes.Black, 1);
-        private readonly Pen markPen = new Pen(Brushes.Black, 1);
+        private readonly Pen borderPen;
+        private readonly Pen markPen;
         private int padding;
         private readonly Label leftInfo = new Label();
         private readonly Label rightInfo = new Label();
@@ -43,6 +45,9 @@ namespace SeaBattle
 
         public MainWindow()
         {
+            BackColor = darkGray;
+            borderPen = new Pen(darkGray, 1);
+            markPen = new Pen(darkGray, 1);
             //Icon = new Icon("../../ship.ico");
             DoubleBuffered = true;
             SetClientSizeCore();            
@@ -106,14 +111,14 @@ namespace SeaBattle
                 rightCells.SetNewType(cell, CellType.Sea);
 
             //Paint -= winnerMarking; 
-            leftBackgroundColour = leftBackground;
-            rightBackgroundColour = rightBackground;
+            leftBackgroundBrush = new SolidBrush(leftBackground);
+            rightBackgroundBrush = new SolidBrush(rightBackground);
         }
 
         private void AddNActivateButtons()
         {
-            mainButton.BackColor = Color.DarkSlateGray;
-            mainButton.ForeColor = Color.White;
+            mainButton.BackColor = whiteTextBack;
+            mainButton.ForeColor = darkGray;
             mainButton.Click += BeforeGameOnButtonClick();
             mainButton.Text = Resources.MainWindow_before_game;
             Controls.Add(mainButton);
@@ -142,16 +147,14 @@ namespace SeaBattle
         };
 
         private bool ShipsSetCorrect()
-        {
-            foreach (var ship in playerFleet)
-                foreach (var cell in Ship.PreBuffer(ship))
-                    if (leftCells[cell.X, cell.Y].Type == CellType.Ship)
-                        return false;
-            return true;
-        }
+            => playerFleet.All(ship => 
+                Ship.PreBuffer(ship)
+                    .All(cell => leftCells[cell.X, cell.Y].Type != CellType.Ship));
 
         private void AddNActivateLabels()
-        {            
+        {
+            leftInfo.ForeColor = darkGray;
+            rightInfo.ForeColor = darkGray;
             leftInfo.BackColor = Color.Transparent;
             rightInfo.BackColor = Color.Transparent;
             rightInfo.TextAlign = ContentAlignment.MiddleRight;           
@@ -159,9 +162,9 @@ namespace SeaBattle
             Controls.Add(rightInfo);
 
             globalGameInfo.Padding = new Padding(10, 0, 0, 1);
-            globalGameInfo.ForeColor = Color.White;            
-            globalGameInfo.TextAlign = ContentAlignment.MiddleLeft;
-            globalGameInfo.BackColor = Color.DarkSlateGray;
+            globalGameInfo.ForeColor = darkGray;            
+            globalGameInfo.TextAlign = ContentAlignment.MiddleRight;
+            globalGameInfo.BackColor = whiteTextBack;
             Controls.Add(globalGameInfo);            
         }
 
@@ -285,21 +288,21 @@ namespace SeaBattle
             };        
 
         private bool IsPlaceSuitableForSailing(Point place)
-        {
-            foreach (var cell in Ship.PreBody(new Ship(place, sailingShip.Size, sailingShip.IsHorizontal)))
-                if (cell.X > GameModel.WidthOfField || cell.Y > GameModel.HeightOfField
-                    || cell.X < 1 || cell.Y < 1
-                    || leftCells[cell.X, cell.Y].Type == CellType.Ship)
-                    return false;
-            return true;
-        }
+            => Ship.PreBody(new Ship(place, sailingShip.Size, sailingShip.IsHorizontal))
+                .All(cell => cell.X <= GameModel.WidthOfField 
+                             && cell.Y <= GameModel.HeightOfField 
+                             && cell.X >= 1 
+                             && cell.Y >= 1 
+                             && leftCells[cell.X, cell.Y].Type != CellType.Ship);
 
         private int LeftXCellIndex(int x) => (x - padding) / cellSize + 1;
         private int LeftYCellIndex(int y) => (y - padding) / cellSize + 1;
 
         private bool IsPointInLeftField(int x, int y)
-            => x > padding && x < GameModel.WidthOfField * cellSize + padding
-                && y > padding && y < cellSize * GameModel.HeightOfField + padding;
+            => x > padding 
+               && x < GameModel.WidthOfField * cellSize + padding 
+               && y > padding 
+               && y < cellSize * GameModel.HeightOfField + padding;
 
         private bool IsPointInRightField(int x, int y)
             => x < ClientSize.Width - padding && x > ClientSize.Width - padding - cellSize * (GameModel.WidthOfField + 1)
@@ -325,9 +328,9 @@ namespace SeaBattle
             {
                 for (var x = 1; x < GameModel.WidthOfField + 1; x++)
                 {
-                    g.FillRectangle(Brushes.White, leftX, cY, cellSize, cellSize);
+                    g.FillRectangle(new SolidBrush(whiteFieldBack), leftX, cY, cellSize, cellSize);
                     g.DrawRectangle(borderPen, leftX, cY, cellSize, cellSize);
-                    g.FillRectangle(Brushes.White, rightX, cY, cellSize, cellSize);
+                    g.FillRectangle(new SolidBrush(whiteFieldBack), rightX, cY, cellSize, cellSize);
                     g.DrawRectangle(borderPen, rightX, cY, cellSize, cellSize);
                     DrawCellObject(leftX, cY, leftCells[x, y].Type, g);
                     DrawCellObject(rightX, cY, rightCells[x, y].Type, g);
@@ -391,9 +394,9 @@ namespace SeaBattle
             var rightWidth = ClientSize.Width - padding / 2 - middleX2;
             var leftWidth2 = middleX2 - middleX1;
 
-            g.FillRectangle(leftBackgroundColour, leftX, upY, leftWidth, heightY);
-            g.FillRectangle(rightBackgroundColour, middleX2, upY, rightWidth, heightY);
-            g.FillRectangle(rightBackgroundColour, middleX1, middleY, leftWidth2, heightY / 2);
+            g.FillRectangle(leftBackgroundBrush, leftX, upY, leftWidth, heightY);
+            g.FillRectangle(rightBackgroundBrush, middleX2, upY, rightWidth, heightY);
+            g.FillRectangle(rightBackgroundBrush, middleX1, middleY, leftWidth2, heightY / 2);
         }
 
         private Point GetRightFieldUpLeftPoint() 
@@ -415,15 +418,15 @@ namespace SeaBattle
                         , x + cellSize - cellBorder, y + cellBorder);
                     break;                    
                 case CellType.Ship:
-                    g.FillRectangle(Brushes.Black, x, y, cellSize, cellSize);
-                    g.DrawRectangle(new Pen(Brushes.White, 1), x + cellBorder, y + cellBorder
+                    g.FillRectangle(new SolidBrush(darkGray), x, y, cellSize, cellSize);
+                    g.DrawRectangle(new Pen(whiteFieldBack, 1), x + cellBorder, y + cellBorder
                         , cellSize - 2 * cellBorder, cellSize - 2 * cellBorder);
                     break;                    
                 case CellType.Sea:
                     break;
                 case CellType.SailingShip:
-                    g.FillRectangle(Brushes.LightGray, x, y, cellSize, cellSize);
-                    g.DrawRectangle(new Pen(Brushes.White, 1), x + cellBorder, y + cellBorder
+                    g.FillRectangle(new SolidBrush(lightGray), x, y, cellSize, cellSize);
+                    g.DrawRectangle(new Pen(whiteFieldBack, 1), x + cellBorder, y + cellBorder
                         , cellSize - 2 * cellBorder, cellSize - 2 * cellBorder);
                     break;
                 default:
@@ -439,9 +442,9 @@ namespace SeaBattle
             arg.Graphics.FillRectangle(colour
             , ClientSize.Width - padding - (10 * cellSize), padding
             , 10 * cellSize, 10 * cellSize);*/
-            var backColour = winnerIsLeft ? winBackground : loseBackground;
-            leftBackgroundColour = backColour;
-            rightBackgroundColour = backColour;
+            var backColour = winnerIsLeft ? leftBackground : rightBackground;
+            leftBackgroundBrush = new SolidBrush(backColour);
+            rightBackgroundBrush = new SolidBrush(backColour);
             //Paint += winnerMarking;                      
         }
 
