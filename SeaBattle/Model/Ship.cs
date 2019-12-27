@@ -5,15 +5,16 @@ namespace SeaBattle
 {
     internal class Ship
     {
-        private const string Name = "";
+        private readonly string name;
         internal bool IsHorizontal { get; private set; }
-        private Point HeadPosition { get; set; }
+        internal Point HeadPosition { get; private set; }
         internal int Size { get; }
         private int Health { get; set; }
         internal bool IsDead => Health <= 0;
 
-        internal Ship(Point head, int size, bool isHorizontal = true)
+        internal Ship(Point head, int size, bool isHorizontal = true, string name = "")
         {
+            this.name = name;
             HeadPosition = head;
             IsHorizontal = isHorizontal;
             Size = size;
@@ -68,7 +69,7 @@ namespace SeaBattle
         public override string ToString()
         {
             var orientation = IsHorizontal ? "horizontal" : "vertical";
-            return $"{Name}: size: {Size}, {orientation}, head in {HeadPosition}";
+            return $"{name}: size: {Size}, {orientation}, head in {HeadPosition}";
         }
     }
 }

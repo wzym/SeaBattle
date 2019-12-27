@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 
@@ -7,7 +6,7 @@ namespace SeaBattle
 {
     internal class FleetGenerator
     {
-        internal readonly string[] ShipNames =
+        private readonly string[] shipNames =
         {
             "Стремительный", "Коварный", "Летящий", "Упорный", "Леденящий", "Двенадцатый", "Контролирующий",
             "Подводный", "Невероятный", "Чёрный", "Гладкий", "Светящийся", "Разящий", "Бездомный", "Нескончаемый",
@@ -17,7 +16,6 @@ namespace SeaBattle
         };
         
         private readonly Field field;
-        private static readonly Random Rnd = new Random();
 
         public FleetGenerator(Field field)
         {
@@ -27,10 +25,17 @@ namespace SeaBattle
         internal Ship GetShip(int decksAmount)
         {
             var variants = FormVariants(decksAmount);
-            var index = Rnd.Next(variants.Count);
-            var ship = variants[index];
+            var variant = StaticMethods.GetRandomElement(variants);
+            var ship = new Ship(variant.HeadPosition, variant.Size, variant.IsHorizontal, GetName());
+            //var index = Rnd.Next(variants.Count);
+            //var ship = variants[index];
             return ship;
-        }        
+        }
+
+        private string GetName()
+        {
+            return StaticMethods.GetRandomElement(shipNames);
+        }
 
         private List<Ship> FormVariants(int decksAmount)
         {
