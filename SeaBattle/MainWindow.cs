@@ -9,7 +9,7 @@ namespace SeaBattle
 {
     internal sealed class MainWindow : Form
     {
-        private const double WindowSizeCoefficient = 0.6;
+        private const double WindowStartSizeCoefficient = 0.6;
         private const int WidthCoefficient = 26;
         private const int HeightCoefficient = 14;
         private const string fontStyle = "Times New Roman";
@@ -24,8 +24,8 @@ namespace SeaBattle
         private readonly Brush leftBackgroundColour = Brushes.GreenYellow;
         private readonly Brush rightBackgroundColour = Brushes.BlueViolet;
         private int cellSize;
-        private readonly GameCell[,] leftCells = new GameCell[GameModel.WidthOfField + 2, GameModel.HeightOfField + 2];
-        private readonly GameCell[,] rightCells = new GameCell[GameModel.WidthOfField + 2, GameModel.HeightOfField + 2];
+        private readonly Field leftCells = new Field();
+        private readonly Field rightCells = new Field();
         private readonly Pen borderPen = new Pen(Brushes.Black, 1);
         private readonly Pen markPen = new Pen(Brushes.Black, 1);
         private int padding;
@@ -42,8 +42,7 @@ namespace SeaBattle
             //Icon = new Icon("../../ship.ico");
             DoubleBuffered = true;
             SetClientSizeCore();            
-            ChangeSizes();
-            ActivateCells();
+            ChangeSizes();           
             
             Paint += (sender, args) => ReDraw(args.Graphics);
             SizeChanged += (sender, args) =>
@@ -52,7 +51,7 @@ namespace SeaBattle
                 Invalidate();
             };
             MouseClick += (sender, args) => ProcessClick(args.X, args.Y, args);
-            MouseMove += (sender, args) => Sail(args);
+            MouseMove += (sender, args) => Sail(args);            
             
             AddNActivateLabels();
             AddNActivateButtons();
@@ -62,8 +61,8 @@ namespace SeaBattle
         private void SetClientSizeCore()
         {
             var screen = Screen.PrimaryScreen.Bounds;
-            var x = Convert.ToInt32(screen.Width * WindowSizeCoefficient);
-            var y = Convert.ToInt32(screen.Height * WindowSizeCoefficient);
+            var x = Convert.ToInt32(screen.Width * WindowStartSizeCoefficient);
+            var y = Convert.ToInt32(screen.Height * WindowStartSizeCoefficient);
             ClientSize = new Size(x, y);
             MinimumSize = new Size(600, 350);
         }
@@ -77,23 +76,23 @@ namespace SeaBattle
                 if (!IsPlaceSuitableForSeiling(head)) return;
 
                 foreach (var cell in Ship.PreBody(seilingShip))
-                    leftCells[cell.X, cell.Y].SetNewType(CellType.Sea);
+                    leftCells.SetNewType(cell, CellType.Sea);
                 seilingShip.Sail(head);
                 foreach (var cell in Ship.PreBody(seilingShip))
-                    leftCells[cell.X, cell.Y].SetNewType(CellType.SailingShip);
+                    leftCells.SetNewType(cell, CellType.SailingShip);
             }
             Invalidate();
         }
 
         internal void Clear()
         {
-            for(var y = 1; y < GameModel.HeightOfField + 1; y++)
-                for(var x = 1; x < GameModel.WidthOfField + 1; x++)
-                {
-                    leftCells[x, y].SetNewType(CellType.Sea);
-                    rightCells[x, y].SetNewType(CellType.Sea);
-                }
-            Paint -= winnerChecking; 
+            foreach(var cell in Field.GetWorkingCellsIndexes(leftCells))            
+                leftCells.SetNewType(cell, CellType.Sea);
+                            
+            foreach(var cell in Field.GetWorkingCellsIndexes(rightCells))
+                rightCells.SetNewType(cell, CellType.Sea);
+
+            Paint -= winnerMarking; 
         }
 
         private void AddNActivateButtons()
@@ -145,8 +144,7 @@ namespace SeaBattle
             Controls.Add(rightInfo);
 
             globalGameInfo.Padding = new Padding(10, 0, 0, 1);
-            globalGameInfo.ForeColor = Color.White;
-            globalGameInfo.Font = new Font("Times New Roman", 30);
+            globalGameInfo.ForeColor = Color.White;            
             globalGameInfo.TextAlign = ContentAlignment.MiddleLeft;
             globalGameInfo.BackColor = Color.DarkSlateGray;
             Controls.Add(globalGameInfo);            
@@ -165,7 +163,7 @@ namespace SeaBattle
         {            
             var field = isLeftField ? leftCells : rightCells;
             foreach (var cell in cells)            
-                field[cell.X, cell.Y].SetNewType(cell.Type);
+                field.SetNewType(cell.X, cell.Y, cell.Type);
             
             Invalidate();
         }
@@ -178,8 +176,8 @@ namespace SeaBattle
             {
                 foreach (var cell in Ship.PreBody(ship))
                 {
-                    field[cell.X, cell.Y].SetNewType(CellType.Ship);
-                    field[cell.X, cell.Y].Ship = ship;
+                    field.SetNewType(cell, CellType.Ship);
+                    field.SetShip(cell.X, cell.Y, ship);
                 }
                     
             }
@@ -205,7 +203,7 @@ namespace SeaBattle
                                 return;
                             seilingShip = leftCells[xOfCell, yOfCell].Ship;
                             foreach (var cell in Ship.PreBody(seilingShip))
-                                leftCells[cell.X, cell.Y].SetNewType(CellType.SailingShip);
+                                leftCells.SetNewType(cell, CellType.SailingShip);
                         }
                     }
                     else if (!shipSettingRegime && IsPointInRightField(x, y))
@@ -229,11 +227,11 @@ namespace SeaBattle
                     if (shipSettingRegime && seilingShip != null)
                     {
                         foreach(var cell in Ship.PreBody(seilingShip))
-                            leftCells[cell.X, cell.Y].SetNewType(CellType.Sea);
+                            leftCells.SetNewType(cell, CellType.Sea);
                         seilingShip.Reverse();
                         seilingShip.Sail(FindSuitablePlace(new Point(LeftXCellIndex(x), LeftYCellIndex(y))));
                         foreach (var cell in Ship.PreBody(seilingShip))
-                            leftCells[cell.X, cell.Y].SetNewType(CellType.SailingShip);
+                            leftCells.SetNewType(cell, CellType.SailingShip);
                         Invalidate();
                     }
                     break;
@@ -302,30 +300,6 @@ namespace SeaBattle
             markPen.Width = cellSize / MarkPenCoefficient;
         }
 
-        private void ActivateCells()
-        {
-            for(var x = 0; x < GameModel.WidthOfField + 2; x++)
-            {
-                leftCells[x, 0] = new GameCell(CellType.Bomb, x, 0);
-                leftCells[x, leftCells.GetLength(0) - 1] = new GameCell(CellType.Bomb, x, leftCells.GetLength(0) - 1);
-                rightCells[x, 0] = new GameCell(CellType.Bomb, x, 0);
-                rightCells[x, rightCells.GetLength(0) - 1] = new GameCell(CellType.Bomb, x, rightCells.GetLength(0) - 1);
-            }
-            for (var y = 0; y < GameModel.WidthOfField + 2; y++)
-            {
-                leftCells[0, y] = new GameCell(CellType.Bomb, y, 0);
-                leftCells[leftCells.GetLength(1) - 1, y] = new GameCell(CellType.Bomb, leftCells.GetLength(1) - 1, y);
-                rightCells[0, y] = new GameCell(CellType.Bomb, y, 0);
-                rightCells[rightCells.GetLength(1) - 1, y] = new GameCell(CellType.Bomb, rightCells.GetLength(1) - 1, y);
-            }
-            for (var x = 1; x < GameModel.WidthOfField + 1; x++)
-                for (var y = 1; y < GameModel.HeightOfField + 1; y++)
-                { 
-                    leftCells[x, y] = new GameCell(CellType.Sea, x, y);
-                    rightCells[x, y] = new GameCell(CellType.Sea, x, y);
-                }
-        }
-
         private void ReDraw(Graphics g)
         {            
             padding = cellSize;
@@ -357,8 +331,9 @@ namespace SeaBattle
 
         private void MoveLabels()
         {
-            var boxHeight = cellSize * GameModel.HeightOfField / 2 - cellSize;
-            var boxWidth = 5 * cellSize / 2;
+            var oneAndHalfPadding = 3 / 2 * padding;
+            var boxHeight = (int)(cellSize * GameModel.HeightOfField / 2.0 - cellSize * 1.3);
+            var boxWidth = (int)(2.5 * cellSize);
             leftInfo.Height = boxHeight;
             leftInfo.Width = boxWidth;
             rightInfo.Height = boxHeight;
@@ -367,10 +342,11 @@ namespace SeaBattle
                 , Math.Min(ClientSize.Width / WidthFontCoefficient, ClientSize.Height / HeightFontCoefficient));
             leftInfo.Font = font;
             rightInfo.Font = font;
-            leftInfo.Top = 3 * padding / 2;
-            leftInfo.Left = cellSize * GameModel.WidthOfField + 3 * padding / 2;
-            rightInfo.Top = cellSize * GameModel.HeightOfField + padding / 2 - rightInfo.Height;
-            rightInfo.Left = ClientSize.Width - 3 * padding / 2 - (GameModel.WidthOfField * cellSize) - rightInfo.Width;
+            leftInfo.Top = (int)(cellSize * 1.5);
+            leftInfo.Left = cellSize * GameModel.WidthOfField + oneAndHalfPadding;
+            //rightInfo.Top = cellSize * GameModel.HeightOfField + padding / 2 - rightInfo.Height;
+            rightInfo.Top = (int)(cellSize * 7.5);
+            rightInfo.Left = ClientSize.Width - oneAndHalfPadding - (GameModel.WidthOfField * cellSize) - rightInfo.Width;
 
             globalGameInfo.Height = cellSize;
             globalGameInfo.Width = ClientSize.Width - cellSize;
@@ -381,9 +357,10 @@ namespace SeaBattle
 
         private void SetButtonPosition()
         {
-            mainButton.Width = cellSize * 2;
-            mainButton.Height = cellSize;
-            mainButton.Font = new Font("Times New Roman", Math.Min(ClientSize.Width / 80, ClientSize.Height / 40));
+            mainButton.Width = (int)(cellSize * 2 * 1.5);
+            mainButton.Height = (int)(cellSize * 1.5);
+            var fontSize = Math.Min(ClientSize.Width / 80, ClientSize.Height / 40);
+            mainButton.Font = new Font(fontStyle, fontSize);
             mainButton.Left = ClientSize.Width / 2 - mainButton.Width / 2;
             mainButton.Top = padding + GameModel.HeightOfField / 2 * cellSize - mainButton.Height / 2;
         }
@@ -443,13 +420,13 @@ namespace SeaBattle
         public void MarkWinner(bool winnerIsLeft)
         {
             var colour = winnerIsLeft ? Brushes.Aqua : Brushes.Red;
-            winnerChecking = (_, arg) =>
+            winnerMarking = (_, arg) =>
             arg.Graphics.FillRectangle(colour
             , ClientSize.Width - padding - (10 * cellSize), padding
             , 10 * cellSize, 10 * cellSize);
-            Paint += winnerChecking;
+            Paint += winnerMarking;
         }
 
-        private PaintEventHandler winnerChecking;        
+        private PaintEventHandler winnerMarking;        
     }
 }
