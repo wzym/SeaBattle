@@ -9,8 +9,13 @@ namespace SeaBattle
 {
     internal sealed class MainWindow : Form
     {
-        private const int WidthFieldCoefficient = 26;
-        private const int HeightFieldCoefficient = 14;
+        private const double WindowSizeCoefficient = 0.6;
+        private const int WidthCoefficient = 26;
+        private const int HeightCoefficient = 14;
+        private const string fontStyle = "Times New Roman";
+        private const int WidthFontCoefficient = 50;
+        private const int HeightFontCoefficient = 28;
+        private const int MarkPenCoefficient = 6;
 
         internal event Action<Point, MouseEventArgs> TurnDone;        
         internal event Action RestartGame;
@@ -33,11 +38,10 @@ namespace SeaBattle
         private IEnumerable<Ship> playerFleet;
 
         public MainWindow()
-        {
+        {                        
             //Icon = new Icon("../../ship.ico");
             DoubleBuffered = true;
-            ClientSize = new Size(2000, 1000);
-            MinimumSize = new Size(800, 400);
+            SetClientSizeCore();            
             ChangeSizes();
             ActivateCells();
             
@@ -49,9 +53,19 @@ namespace SeaBattle
             };
             MouseClick += (sender, args) => ProcessClick(args.X, args.Y, args);
             MouseMove += (sender, args) => Sail(args);
+            
             AddNActivateLabels();
             AddNActivateButtons();
             globalGameInfo.Text = Resources.Ship_setting_instruction;
+        }
+
+        private void SetClientSizeCore()
+        {
+            var screen = Screen.PrimaryScreen.Bounds;
+            var x = Convert.ToInt32(screen.Width * WindowSizeCoefficient);
+            var y = Convert.ToInt32(screen.Height * WindowSizeCoefficient);
+            ClientSize = new Size(x, y);
+            MinimumSize = new Size(600, 350);
         }
 
         private void Sail(MouseEventArgs args)
@@ -126,9 +140,8 @@ namespace SeaBattle
         {            
             leftInfo.BackColor = Color.Transparent;
             rightInfo.BackColor = Color.Transparent;
-            rightInfo.TextAlign = ContentAlignment.MiddleRight;
-            leftInfo.Font = new Font("Times New Roman", 50);
-            Controls.Add(leftInfo); 
+            rightInfo.TextAlign = ContentAlignment.MiddleRight;           
+            Controls.Add(leftInfo);
             Controls.Add(rightInfo);
 
             globalGameInfo.Padding = new Padding(10, 0, 0, 1);
@@ -235,7 +248,8 @@ namespace SeaBattle
 
             do
             {
-                foreach (var cell in GetNeighbors(currPlace).Where(c => c.Type == CellType.Sea && !visited.Contains(new Point(c.X, c.Y))))
+                foreach (var cell in GetNeighbors(currPlace)
+                    .Where(c => c.Type == CellType.Sea && !visited.Contains(new Point(c.X, c.Y))))
                     presumed.Enqueue(cell);
                 if (presumed.Count < 1) throw new Exception("Not found suitable place.");
                 var curr = presumed.Dequeue();
@@ -281,11 +295,11 @@ namespace SeaBattle
 
         private void ChangeSizes()
         {
-            var byWidth = ClientSize.Width / WidthFieldCoefficient;
-            var byHeight = ClientSize.Height / HeightFieldCoefficient;
+            var byWidth = ClientSize.Width / WidthCoefficient;
+            var byHeight = ClientSize.Height / HeightCoefficient;
             cellSize = Math.Min(byWidth, byHeight);
             // ReSharper disable once PossibleLossOfFraction
-            markPen.Width = cellSize / 6;
+            markPen.Width = cellSize / MarkPenCoefficient;
         }
 
         private void ActivateCells()
@@ -349,7 +363,8 @@ namespace SeaBattle
             leftInfo.Width = boxWidth;
             rightInfo.Height = boxHeight;
             rightInfo.Width = boxWidth;
-            var font = new Font("Times New Roman", Math.Min(ClientSize.Width / 40, ClientSize.Height / 20));
+            var font = new Font(fontStyle
+                , Math.Min(ClientSize.Width / WidthFontCoefficient, ClientSize.Height / HeightFontCoefficient));
             leftInfo.Font = font;
             rightInfo.Font = font;
             leftInfo.Top = 3 * padding / 2;
@@ -360,9 +375,8 @@ namespace SeaBattle
             globalGameInfo.Height = cellSize;
             globalGameInfo.Width = ClientSize.Width - cellSize;
             globalGameInfo.Left = cellSize / 2;
-            globalGameInfo.Top = GameModel.HeightOfField * cellSize + padding * 2;
-            var globalFont = new Font("Times New Roman", font.Size / 6 * 5);
-            globalGameInfo.Font = globalFont;
+            globalGameInfo.Top = GameModel.HeightOfField * cellSize + padding * 2;            
+            globalGameInfo.Font = new Font(fontStyle, font.Size / 6 * 5);
         }
 
         private void SetButtonPosition()
@@ -380,7 +394,7 @@ namespace SeaBattle
             var upY = padding / 2;
             var middleY = padding + cellSize * GameModel.HeightOfField / 2;
             var middleX1 = 3 * padding / 2 + GameModel.HeightOfField * cellSize;
-            var middleX2 = GetRightFieldUpLeft().X - padding /2;
+            var middleX2 = GetRightFieldUpLeftPoint().X - padding /2;
             var leftWidth = middleX2 - leftX;
             var heightY = cellSize * GameModel.HeightOfField + padding;
             var rightWidth = ClientSize.Width - padding / 2 - middleX2;
@@ -391,7 +405,7 @@ namespace SeaBattle
             g.FillRectangle(rightBackgroundColour, middleX1, middleY, leftWidth2, heightY / 2);
         }
 
-        private Point GetRightFieldUpLeft() 
+        private Point GetRightFieldUpLeftPoint() 
             => new Point(ClientSize.Width - padding - cellSize * GameModel.WidthOfField, padding);
 
         private void DrawCellObject(int x, int y, CellType cellType, Graphics g)
@@ -426,7 +440,7 @@ namespace SeaBattle
             }
         }
 
-        public void CheckWinner(bool winnerIsLeft)
+        public void MarkWinner(bool winnerIsLeft)
         {
             var colour = winnerIsLeft ? Brushes.Aqua : Brushes.Red;
             winnerChecking = (_, arg) =>

@@ -55,7 +55,7 @@ namespace SeaBattle
 
         private void WorkOnGameEnd()
         {
-            view.CheckWinner(status.Player.Fleet.Health > 0);
+            view.MarkWinner(status.Player.Fleet.Health > 0);
         }
 
         private void Turn()
