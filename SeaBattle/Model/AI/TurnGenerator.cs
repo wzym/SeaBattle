@@ -9,11 +9,10 @@ namespace SeaBattle
     {
         protected readonly Field Model;
         private PresumedShip presumedShip;
-        private readonly Random rnd = new Random();
         private readonly IEnumerator<Point> enumerator;
         private Dictionary<int, int> presumedFleet;
         private List<Point> processingTurns;
-        protected int maxShipLength;
+        protected int MaxShipLength;
 
         internal TurnGenerator()
         {
@@ -28,7 +27,7 @@ namespace SeaBattle
             presumedFleet = new Dictionary<int, int>();
             foreach (var (length, amount) in GameModel.FleetParams)
                 presumedFleet[length] = amount;
-            maxShipLength = LongestShipLength();
+            MaxShipLength = LongestShipLength();
         }
 
         protected int LongestShipLength()
@@ -47,7 +46,7 @@ namespace SeaBattle
             {
                 var turns = GetTurns();
                 if (turns.Count == 0) yield break;
-                yield return GetRandomElement(turns);
+                yield return StaticMethods.GetRandomElement(turns);
             }
         }
 
@@ -64,7 +63,7 @@ namespace SeaBattle
 
             DeleteShip(deadShip);
             if (presumedFleet.Count > 0 
-                && deadShip.Size > maxShipLength) 
+                && deadShip.Size > MaxShipLength) 
                 FormNotProcessedTurns();
             else ClearNotProcessTurns();
         }
@@ -102,12 +101,10 @@ namespace SeaBattle
         private void DeleteShip(Ship ship)
         {
             presumedFleet[ship.Size]--;
-            if (presumedFleet[ship.Size] <= 0)
-            {
-                presumedFleet.Remove(ship.Size);
-                if (ship.Size == maxShipLength && presumedFleet.Count > 0)
-                    maxShipLength = LongestShipLength();
-            }                
+            if (presumedFleet[ship.Size] > 0) return;
+            presumedFleet.Remove(ship.Size);
+            if (ship.Size == MaxShipLength && presumedFleet.Count > 0)
+                MaxShipLength = LongestShipLength();
         }
 
         private bool IsVariantPossible(Ship ship)
@@ -127,7 +124,7 @@ namespace SeaBattle
 
         private List<Point> GetSearchingTurns()
         {
-            var size = maxShipLength;
+            var size = MaxShipLength;
             if (size == 1)
                 return NotCheckedCells;
 
@@ -157,7 +154,7 @@ namespace SeaBattle
 
         private Point[] GetMaskCell()
         {
-            var size = maxShipLength;
+            var size = MaxShipLength;
             var xValues = new List<int>(size);
             var yValues = new List<int>(size);
 
@@ -165,13 +162,13 @@ namespace SeaBattle
             return FillMaskRandomly(size, xValues, yValues);
         }
 
-        private Point[] FillMaskRandomly(int size, List<int> xValues, List<int> yValues)
+        private static Point[] FillMaskRandomly(int size, List<int> xValues, List<int> yValues)
         {
             var result = new Point[size];
             for (var i = 0; i < size; i++)
             {
-                var x = GetRandomElement(xValues);
-                var y = GetRandomElement(yValues);
+                var x = StaticMethods.GetRandomElement(xValues);
+                var y = StaticMethods.GetRandomElement(yValues);
                 result[i] = new Point(x, y);
                 xValues.Remove(x);
                 yValues.Remove(y);
@@ -189,9 +186,6 @@ namespace SeaBattle
             }
         }
 
-        private T GetRandomElement<T>(IReadOnlyList<T> sequence)
-            => sequence[rnd.Next(sequence.Count)];
-        
         private List<Point> NotCheckedCells
             => Field.GetWorkingCellsIndexes(Model)
                 .Where(p => Model[p].Type == CellType.Sea)
