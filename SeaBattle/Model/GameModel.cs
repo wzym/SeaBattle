@@ -86,7 +86,9 @@ namespace SeaBattle
                         if (ship.IsDead)
                         {
                             status.RecordShipDeath(ship);
-                            view.SetNewGameInfo(status.Player.Fleet.ToString(), status.Rival.Fleet.ToString());
+                            view.SetNewGameInfo(status.Player.Fleet.ToString()
+                                , status.Rival.Fleet.ToString());
+                            view.SetGlobalInfo($"{ship.Name} утонул.");
                         }
                         break;
                     case CellType.Bomb:
@@ -94,6 +96,8 @@ namespace SeaBattle
                         break;
                     case CellType.Exploded:
                         if (active.IsArtificial) throw new ArgumentException("Ум повторяется.");
+                        break;
+                    case CellType.SailingShip:
                         break;
                     default:
                         throw new ArgumentOutOfRangeException();

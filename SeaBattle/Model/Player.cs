@@ -70,7 +70,7 @@ namespace SeaBattle
         {
             foreach (var cell in Ship.PreBody(ship))
                 Field.SetShip(cell.X, cell.Y, ship);
-//                Field[cell].Ship = ship;
+
             foreach (var cell in Ship.PreBuffer(ship))
                 Field.SetNewType(cell.X, cell.Y, CellType.Bomb);
         }

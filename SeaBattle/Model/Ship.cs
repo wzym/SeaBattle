@@ -5,7 +5,7 @@ namespace SeaBattle
 {
     internal class Ship
     {
-        private readonly string name;
+        internal readonly string Name;
         internal bool IsHorizontal { get; private set; }
         internal Point HeadPosition { get; private set; }
         internal int Size { get; }
@@ -14,7 +14,7 @@ namespace SeaBattle
 
         internal Ship(Point head, int size, bool isHorizontal = true, string name = "")
         {
-            this.name = name;
+            this.Name = name;
             HeadPosition = head;
             IsHorizontal = isHorizontal;
             Size = size;
@@ -69,7 +69,7 @@ namespace SeaBattle
         public override string ToString()
         {
             var orientation = IsHorizontal ? "horizontal" : "vertical";
-            return $"{name}: size: {Size}, {orientation}, head in {HeadPosition}";
+            return $"{Name}: size: {Size}, {orientation}, head in {HeadPosition}";
         }
     }
 }
