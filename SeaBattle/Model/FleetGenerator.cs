@@ -19,7 +19,7 @@ namespace SeaBattle
         {
             var variants = FormVariants(decksAmount);
             var index = Rnd.Next(variants.Count);
-            var ship = variants[index];            
+            var ship = variants[index];
             return ship;
         }        
 
@@ -43,6 +43,6 @@ namespace SeaBattle
 
         private bool IsGood(Ship variant)
             => Ship.PreBody(variant)
-                .All(cell => field[cell.X, cell.Y].Type == CellType.Sea);
+                .All(cell => field[cell].Type == CellType.Sea);
     }
 }

@@ -12,17 +12,21 @@ namespace SeaBattle
         private const double WindowStartSizeCoefficient = 0.6;
         private const int WidthCoefficient = 26;
         private const int HeightCoefficient = 14;
-        private const string fontStyle = "Times New Roman";
+        private const string FontStyle = "Times New Roman";
         private const int WidthFontCoefficient = 50;
         private const int HeightFontCoefficient = 28;
         private const int MarkPenCoefficient = 6;
+        private readonly Brush leftBackground = Brushes.GreenYellow;
+        private readonly Brush rightBackground = Brushes.BlueViolet;
+        private readonly Brush winBackground = Brushes.LightGreen;
+        private readonly Brush loseBackground = Brushes.DarkRed;
 
         internal event Action<Point, MouseEventArgs> TurnDone;        
         internal event Action RestartGame;
         internal event Action<IEnumerable<Ship>> FleetIsChosen;
 
-        private readonly Brush leftBackgroundColour = Brushes.GreenYellow;
-        private readonly Brush rightBackgroundColour = Brushes.BlueViolet;
+        private Brush leftBackgroundColour;
+        private Brush rightBackgroundColour;
         private int cellSize;
         private readonly Field leftCells = new Field();
         private readonly Field rightCells = new Field();
@@ -34,11 +38,11 @@ namespace SeaBattle
         private readonly Label globalGameInfo = new Label();        
         private readonly Button mainButton = new Button();
         private bool shipSettingRegime = true;        
-        private Ship seilingShip;
+        private Ship sailingShip;
         private IEnumerable<Ship> playerFleet;
 
         public MainWindow()
-        {                        
+        {
             //Icon = new Icon("../../ship.ico");
             DoubleBuffered = true;
             SetClientSizeCore();            
@@ -58,6 +62,15 @@ namespace SeaBattle
             globalGameInfo.Text = Resources.Ship_setting_instruction;
         }
 
+        internal void MarkSurvivors(IEnumerable<Point> survivedDecks)
+        {
+            foreach(var cell in survivedDecks)
+            {
+                rightCells.SetNewType(cell, CellType.SailingShip);
+            }
+            Invalidate();
+        }
+
         private void SetClientSizeCore()
         {
             var screen = Screen.PrimaryScreen.Bounds;
@@ -69,16 +82,16 @@ namespace SeaBattle
 
         private void Sail(MouseEventArgs args)
         {
-            if (seilingShip == null) return;
+            if (sailingShip == null) return;
             if (IsPointInLeftField(args.X, args.Y))
             {
                 var head = new Point(LeftXCellIndex(args.X), LeftYCellIndex(args.Y));
-                if (!IsPlaceSuitableForSeiling(head)) return;
+                if (!IsPlaceSuitableForSailing(head)) return;
 
-                foreach (var cell in Ship.PreBody(seilingShip))
+                foreach (var cell in Ship.PreBody(sailingShip))
                     leftCells.SetNewType(cell, CellType.Sea);
-                seilingShip.Sail(head);
-                foreach (var cell in Ship.PreBody(seilingShip))
+                sailingShip.Sail(head);
+                foreach (var cell in Ship.PreBody(sailingShip))
                     leftCells.SetNewType(cell, CellType.SailingShip);
             }
             Invalidate();
@@ -92,7 +105,9 @@ namespace SeaBattle
             foreach(var cell in Field.GetWorkingCellsIndexes(rightCells))
                 rightCells.SetNewType(cell, CellType.Sea);
 
-            Paint -= winnerMarking; 
+            //Paint -= winnerMarking; 
+            leftBackgroundColour = leftBackground;
+            rightBackgroundColour = rightBackground;
         }
 
         private void AddNActivateButtons()
@@ -178,8 +193,7 @@ namespace SeaBattle
                 {
                     field.SetNewType(cell, CellType.Ship);
                     field.SetShip(cell.X, cell.Y, ship);
-                }
-                    
+                }                    
             }
             Invalidate();
         }
@@ -191,9 +205,9 @@ namespace SeaBattle
                 case MouseButtons.Left:
                     if (shipSettingRegime && IsPointInLeftField(x, y))
                     {
-                        if (seilingShip != null)
+                        if (sailingShip != null)
                         {
-                            seilingShip = null;
+                            sailingShip = null;
                             SetAndDrawFleet(playerFleet, true);
                         } else
                         {
@@ -201,8 +215,8 @@ namespace SeaBattle
                             var yOfCell = LeftYCellIndex(y);
                             if (leftCells[xOfCell, yOfCell].Type != CellType.Ship)
                                 return;
-                            seilingShip = leftCells[xOfCell, yOfCell].Ship;
-                            foreach (var cell in Ship.PreBody(seilingShip))
+                            sailingShip = leftCells[xOfCell, yOfCell].Ship;
+                            foreach (var cell in Ship.PreBody(sailingShip))
                                 leftCells.SetNewType(cell, CellType.SailingShip);
                         }
                     }
@@ -224,13 +238,13 @@ namespace SeaBattle
                     }
                     break;
                 case MouseButtons.Right:
-                    if (shipSettingRegime && seilingShip != null)
+                    if (shipSettingRegime && sailingShip != null)
                     {
-                        foreach(var cell in Ship.PreBody(seilingShip))
+                        foreach(var cell in Ship.PreBody(sailingShip))
                             leftCells.SetNewType(cell, CellType.Sea);
-                        seilingShip.Reverse();
-                        seilingShip.Sail(FindSuitablePlace(new Point(LeftXCellIndex(x), LeftYCellIndex(y))));
-                        foreach (var cell in Ship.PreBody(seilingShip))
+                        sailingShip.Reverse();
+                        sailingShip.Sail(FindSuitablePlace(new Point(LeftXCellIndex(x), LeftYCellIndex(y))));
+                        foreach (var cell in Ship.PreBody(sailingShip))
                             leftCells.SetNewType(cell, CellType.SailingShip);
                         Invalidate();
                     }
@@ -252,7 +266,7 @@ namespace SeaBattle
                 if (presumed.Count < 1) throw new Exception("Not found suitable place.");
                 var curr = presumed.Dequeue();
                 currPlace = new Point(curr.X, curr.Y);
-                if (IsPlaceSuitableForSeiling(currPlace)) return currPlace;
+                if (IsPlaceSuitableForSailing(currPlace)) return currPlace;
                 visited.Add(currPlace);
             } while (true);
         }
@@ -270,9 +284,9 @@ namespace SeaBattle
                 leftCells[currPlace.X + 1, currPlace.Y + 1]
             };        
 
-        private bool IsPlaceSuitableForSeiling(Point place)
+        private bool IsPlaceSuitableForSailing(Point place)
         {
-            foreach (var cell in Ship.PreBody(new Ship(place, seilingShip.Size, seilingShip.IsHorizontal)))
+            foreach (var cell in Ship.PreBody(new Ship(place, sailingShip.Size, sailingShip.IsHorizontal)))
                 if (cell.X > GameModel.WidthOfField || cell.Y > GameModel.HeightOfField
                     || cell.X < 1 || cell.Y < 1
                     || leftCells[cell.X, cell.Y].Type == CellType.Ship)
@@ -338,7 +352,7 @@ namespace SeaBattle
             leftInfo.Width = boxWidth;
             rightInfo.Height = boxHeight;
             rightInfo.Width = boxWidth;
-            var font = new Font(fontStyle
+            var font = new Font(FontStyle
                 , Math.Min(ClientSize.Width / WidthFontCoefficient, ClientSize.Height / HeightFontCoefficient));
             leftInfo.Font = font;
             rightInfo.Font = font;
@@ -352,7 +366,7 @@ namespace SeaBattle
             globalGameInfo.Width = ClientSize.Width - cellSize;
             globalGameInfo.Left = cellSize / 2;
             globalGameInfo.Top = GameModel.HeightOfField * cellSize + padding * 2;            
-            globalGameInfo.Font = new Font(fontStyle, font.Size / 6 * 5);
+            globalGameInfo.Font = new Font(FontStyle, font.Size / 6 * 5);
         }
 
         private void SetButtonPosition()
@@ -360,7 +374,7 @@ namespace SeaBattle
             mainButton.Width = (int)(cellSize * 2 * 1.5);
             mainButton.Height = (int)(cellSize * 1.5);
             var fontSize = Math.Min(ClientSize.Width / 80, ClientSize.Height / 40);
-            mainButton.Font = new Font(fontStyle, fontSize);
+            mainButton.Font = new Font(FontStyle, fontSize);
             mainButton.Left = ClientSize.Width / 2 - mainButton.Width / 2;
             mainButton.Top = padding + GameModel.HeightOfField / 2 * cellSize - mainButton.Height / 2;
         }
@@ -419,14 +433,18 @@ namespace SeaBattle
 
         public void MarkWinner(bool winnerIsLeft)
         {
-            var colour = winnerIsLeft ? Brushes.Aqua : Brushes.Red;
-            winnerMarking = (_, arg) =>
+            // var colour = winnerIsLeft ? Brushes.Aqua : Brushes.Red;
+
+            /*winnerMarking = (_, arg) =>
             arg.Graphics.FillRectangle(colour
             , ClientSize.Width - padding - (10 * cellSize), padding
-            , 10 * cellSize, 10 * cellSize);
-            Paint += winnerMarking;
+            , 10 * cellSize, 10 * cellSize);*/
+            var backColour = winnerIsLeft ? winBackground : loseBackground;
+            leftBackgroundColour = backColour;
+            rightBackgroundColour = backColour;
+            //Paint += winnerMarking;                      
         }
 
-        private PaintEventHandler winnerMarking;        
+        //private PaintEventHandler winnerMarking;        
     }
 }

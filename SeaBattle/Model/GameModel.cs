@@ -31,14 +31,16 @@ namespace SeaBattle
 
         private void SetFleetChosenByPlayer(IEnumerable<Ship> fleet)
         {
-            status.Player.Fleet.AddToFleet(fleet);
-            status.Player.AddToField(fleet);
+            var fleetAsArray = fleet as Ship[] ?? fleet.ToArray();
+            status.Player.Fleet.AddToFleet(fleetAsArray);
+            status.Player.AddToField(fleetAsArray);
             status.DefineActivity();
             if (status.Active == status.Rival)
             {
                 view.SetGlobalInfo("Первый ход достался машине.");
                 Turn();
-            } else
+            } 
+            else
             {
                 view.SetGlobalInfo("Ваш ход.");
             }
@@ -56,6 +58,10 @@ namespace SeaBattle
         private void WorkOnGameEnd()
         {
             view.MarkWinner(status.Player.Fleet.Health > 0);
+            foreach(var ship in status.Rival.Fleet.Ships)
+            {
+                view.MarkSurvivors(Ship.PreBody(ship).Where(c => status.Rival.Field[c].Type != CellType.Exploded));                
+            }
         }
 
         private void Turn()
