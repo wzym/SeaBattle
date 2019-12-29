@@ -6,7 +6,7 @@ namespace SeaBattle
 {
     internal class FleetGenerator
     {
-        private readonly string[] shipNames =
+        private static readonly List<string> ShipNames = new List<string>
         {
             "Стремительный", "Коварный", "Летящий", "Упорный", "Леденящий", "Двенадцатый", "Контролирующий",
             "Подводный", "Невероятный", "Чёрный", "Гладкий", "Светящийся", "Разящий", "Бездомный", "Нескончаемый",
@@ -26,15 +26,11 @@ namespace SeaBattle
         {
             var variants = FormVariants(decksAmount);
             var variant = StaticMethods.GetRandomElement(variants);
-            var ship = new Ship(variant.HeadPosition, variant.Size, variant.IsHorizontal, GetName());
-            //var index = Rnd.Next(variants.Count);
-            //var ship = variants[index];
+            var ship = new Ship(variant.HeadPosition
+                , variant.Size
+                , variant.IsHorizontal
+                , ShipNames.PullElement());
             return ship;
-        }
-
-        private string GetName()
-        {
-            return StaticMethods.GetRandomElement(shipNames);
         }
 
         private List<Ship> FormVariants(int decksAmount)
