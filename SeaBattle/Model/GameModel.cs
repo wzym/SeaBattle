@@ -6,9 +6,6 @@ namespace SeaBattle
 {
     internal class GameModel
     {
-        internal static readonly Tuple<int, int>[] FleetParams =
-            {Tuple.Create(4, 1), Tuple.Create(3, 2), Tuple.Create(2, 3), Tuple.Create(1, 4)};
-
         internal const int WidthOfField = 10;
         internal const int HeightOfField = 10;
 

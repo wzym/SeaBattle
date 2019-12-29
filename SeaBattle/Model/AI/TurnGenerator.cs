@@ -25,8 +25,8 @@ namespace SeaBattle
         private void SetPresumedFleet()
         {
             presumedFleet = new Dictionary<int, int>();
-            foreach (var (length, amount) in GameModel.FleetParams)
-                presumedFleet[length] = amount;
+            foreach (var lengthAmount in CommonParameters.NewFleetParams)
+                presumedFleet[lengthAmount.Key] = lengthAmount.Value;
             MaxShipLength = LongestShipLength();
         }
 

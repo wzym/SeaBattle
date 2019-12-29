@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Drawing;
 
 namespace SeaBattle
@@ -31,10 +30,10 @@ namespace SeaBattle
         private void InitializeFleet()
         {
             var generator = new FleetGenerator(Field);
-            foreach (var (length, shipsAmount) in GameModel.FleetParams)
-                for (var i = 0; i < shipsAmount; i++)
+            foreach (var lengthAmount in CommonParameters.NewFleetParams)
+                for (var i = 0; i < lengthAmount.Value; i++)
                 {
-                    var newShip = generator.GetShip(length);
+                    var newShip = generator.GetShip(lengthAmount.Key);
                     Fleet.AddShip(newShip);
                     SetShip(newShip);
                 }
