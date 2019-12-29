@@ -115,7 +115,9 @@ namespace SeaBattle
         {
             var shouldShowCell = isLeftField ?
                 (Func<CellType, bool>) (_ => true) : c => c != CellType.Ship;
-            view.DrawCells(Field.GetWorkingCells(field).Where(c => shouldShowCell(c.Type)), isLeftField);
+            view.DrawCells(CommonMethods
+                .GetWorkingCells(field)
+                .Where(c => shouldShowCell(c.Type)), isLeftField);
         }
     }
 }

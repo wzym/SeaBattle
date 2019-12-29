@@ -103,10 +103,10 @@ namespace SeaBattle
 
         internal void Clear()
         {
-            foreach(var cell in Field.GetWorkingCellsIndexes(leftCells))            
+            foreach(var cell in CommonMethods.GetWorkingCellsIndexes(leftCells))            
                 leftCells.SetNewType(cell, CellType.Sea);
                             
-            foreach(var cell in Field.GetWorkingCellsIndexes(rightCells))
+            foreach(var cell in CommonMethods.GetWorkingCellsIndexes(rightCells))
                 rightCells.SetNewType(cell, CellType.Sea);
             
             leftBackgroundBrush = new SolidBrush(leftBackground);

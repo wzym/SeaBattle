@@ -33,17 +33,17 @@ namespace SeaBattle
         {
             for(var i = 0; i < GameModel.WidthOfField + 2; i++)
             {
-                Field[i, 0] = new GameCell(CellType.Bomb, i, 0);
-                Field[i, GameModel.HeightOfField + 1] = new GameCell(CellType.Bomb, i, GameModel.HeightOfField + 1);
+                new GameCell(CellType.Bomb, i, 0);
+                new GameCell(CellType.Bomb, i, GameModel.HeightOfField + 1);
             }
             for(var i = 1; i < GameModel.HeightOfField + 1; i++)
             {
-                Field[0, i] = new GameCell(CellType.Bomb, 0, i);
-                Field[GameModel.WidthOfField + 1, i] = new GameCell(CellType.Bomb, GameModel.WidthOfField + 1, i);
+                new GameCell(CellType.Bomb, 0, i);
+                new GameCell(CellType.Bomb, GameModel.WidthOfField + 1, i);
             }
             for (var y = 1; y < GameModel.HeightOfField + 1; y++)
             for (var x = 1; x < GameModel.WidthOfField + 1; x++)
-                Field[x, y] = new GameCell(CellType.Sea, x, y);
+                new GameCell(CellType.Sea, x, y);
         }
 
         private void InitializeFleet()
@@ -61,7 +61,7 @@ namespace SeaBattle
 
         private void LeaveOnlyShipsOnField()
         {
-            foreach (var cell in Field.GetWorkingCells(Field))
+            foreach (var cell in CommonMethods.GetWorkingCells(Field))
                 if (cell.Type != CellType.Ship)
                     Field.SetNewType(cell.X, cell.Y, CellType.Sea);
         }
@@ -85,7 +85,7 @@ namespace SeaBattle
 
         private void ClearField()
         {
-            foreach (var cell in Field.GetWorkingCells(Field))
+            foreach (var cell in CommonMethods.GetWorkingCells(Field))
                 Field.SetNewType(cell.X, cell.Y, CellType.Sea);
         }
 

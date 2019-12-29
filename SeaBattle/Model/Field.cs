@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -49,17 +48,9 @@ namespace SeaBattle
                 model[x, y] = new GameCell(CellType.Sea, x, y);
         }
 
-        internal GameCell this[Point index]
-        {
-            get => model[index.X, index.Y];
-            set => model[index.X, index.Y] = value;
-        }
+        internal GameCell this[Point index] => model[index.X, index.Y];
 
-        internal GameCell this[int x, int y]
-        {
-            get => model[x, y];
-            set => model[x, y] = value;
-        }
+        internal GameCell this[int x, int y] => model[x, y];
 
         internal void SetNewType(int x, int y, CellType newType)
         {
@@ -68,25 +59,12 @@ namespace SeaBattle
 
         internal void SetNewType(Point cell, CellType newType)
         {
-            SetNewType(cell.X, cell.Y, newType);
+            model[cell.X, cell.Y].SetNewType(newType);
         }
-
-        internal static IEnumerable<Point> GetWorkingCellsIndexes(Field field)
-        {
-            for (var y = 1; y < field.Height - 1; y++)
-            for (var x = 1; x < field.Width - 1; x++)
-                yield return new Point(x, y);
-        }
-
-        internal static IEnumerable<GameCell> GetWorkingCells(Field field)
-            => GetWorkingCellsIndexes(field).Select(pIndex => field[pIndex]);
 
         public IEnumerator<GameCell> GetEnumerator()
-        {
-            foreach (var cell in model)
-                yield return cell;
-        }
-
+            => model.Cast<GameCell>().GetEnumerator();
+        
         internal void SetShip(int x, int y, Ship ship)
         {
             model[x, y].Ship = ship;

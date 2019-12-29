@@ -143,7 +143,7 @@ namespace SeaBattle
         private List<Point> GetShipSearchTurns(int size, bool isHorizontal = true)
         {
             var result = new List<Point>();
-            foreach (var cell in Field.GetWorkingCellsIndexes(Model))
+            foreach (var cell in CommonMethods.GetWorkingCellsIndexes(Model))
             {
                 var ship = new Ship(cell, size, isHorizontal);
                 if (IsVariantPossible(ship))
@@ -188,7 +188,7 @@ namespace SeaBattle
         }
 
         private List<Point> NotCheckedCells
-            => Field.GetWorkingCellsIndexes(Model)
+            => CommonMethods.GetWorkingCellsIndexes(Model)
                 .Where(p => Model[p].Type == CellType.Sea)
                 .ToList();
     }
