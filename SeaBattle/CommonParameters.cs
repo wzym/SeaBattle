@@ -1,4 +1,6 @@
-﻿namespace SeaBattle
+﻿using System.Collections.Generic;
+
+namespace SeaBattle
 {
     public static class CommonParameters
     {
@@ -9,6 +11,11 @@
             "Бесшовный", "Крылатый", "Пронзительный", "Центральный", "Говорящий", "Стрела", "Обходящий",
             "Прохладный", "Северный", "Вздорный ахтунг", "Южный подводник", "Уборщик", "Чистильщик",
             "Стреляющий без поражения в каждой третьей войне"
+        };
+
+        internal static readonly Dictionary<int, int> NewFleetParams = new Dictionary<int, int>
+        {
+            {4, 1}, {3, 2}, {2, 3}, {1, 4}
         };
     }
 }
