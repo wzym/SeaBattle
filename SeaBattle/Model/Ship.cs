@@ -37,7 +37,7 @@ namespace SeaBattle
         public override string ToString()
         {
             var orientation = IsHorizontal ? "horizontal" : "vertical";
-            return $"{Name}: size - {Size}, {orientation}, head in {HeadPosition}";
+            return $"size - {Size}, {orientation}, head in {HeadPosition}";
         }
     }
 }

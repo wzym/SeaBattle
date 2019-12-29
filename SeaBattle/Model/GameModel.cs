@@ -90,7 +90,8 @@ namespace SeaBattle
                             status.RecordShipDeath(ship);
                             view.SetNewGameInfo(status.Player.Fleet.ToString()
                                 , status.Rival.Fleet.ToString());
-                            view.SetGlobalInfo($"{ship.Name} утонул.");
+                            var fieldName = passive == status.Rival ? "Вражеский" : "Ваш";
+                            view.SetGlobalInfo($"{fieldName} {ship.Name} утонул ({ship}).");
                         }
                         break;
                     case CellType.Bomb:
