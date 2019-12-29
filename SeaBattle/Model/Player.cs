@@ -25,25 +25,7 @@ namespace SeaBattle
             if (isArtificial) TurnGenerator = new TurnGenerator();
             Fleet = new Fleet();
             Field = new Field();
-            InitializeField();
             InitializeFleet();
-        }
-
-        private void InitializeField()
-        {
-            for(var i = 0; i < GameModel.WidthOfField + 2; i++)
-            {
-                new GameCell(CellType.Bomb, i, 0);
-                new GameCell(CellType.Bomb, i, GameModel.HeightOfField + 1);
-            }
-            for(var i = 1; i < GameModel.HeightOfField + 1; i++)
-            {
-                new GameCell(CellType.Bomb, 0, i);
-                new GameCell(CellType.Bomb, GameModel.WidthOfField + 1, i);
-            }
-            for (var y = 1; y < GameModel.HeightOfField + 1; y++)
-            for (var x = 1; x < GameModel.WidthOfField + 1; x++)
-                new GameCell(CellType.Sea, x, y);
         }
 
         private void InitializeFleet()
