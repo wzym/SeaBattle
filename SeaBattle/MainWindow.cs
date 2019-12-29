@@ -10,8 +10,8 @@ namespace SeaBattle
     internal sealed class MainWindow : Form
     {
         private const double WindowStartSizeCoefficient = 0.6;
-        private const int WidthCoefficient = 26;
-        private const int HeightCoefficient = 14;
+        private const int WidthCoefficient = (int)(2.6 * 10);
+        private const int HeightCoefficient = (int)(1.4 * 10);
         private const string FontStyle = "Times New Roman";
         private const int WidthFontCoefficient = 50;
         private const int HeightFontCoefficient = 28;

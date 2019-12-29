@@ -4,7 +4,7 @@ using System.Drawing;
 
 namespace SeaBattle
 {
-    public static class StaticMethods
+    public static class CommonMethods
     {
         private static readonly Random Rnd = new Random();
 

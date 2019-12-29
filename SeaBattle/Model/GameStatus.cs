@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace SeaBattle
 {
@@ -10,13 +12,15 @@ namespace SeaBattle
         internal bool IsGameContinues { get; private set; } = true;
         internal Player Active { get; private set; }
         internal Player Passive { get; private set; }
+        internal static List<string> NamesForTheGameShips;
         
         internal GameStatus()
         {
+            NamesForTheGameShips = CommonParameters.ShipNames.ToList();
             Player = new Player(false);
-            Rival = new Player(true);            
+            Rival = new Player(true);
         }
-
+        
         internal void RecordShipDeath(Ship deadShip)
         {
             foreach (var bufCell in deadShip.PreliminaryBuffer())

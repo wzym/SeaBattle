@@ -46,7 +46,7 @@ namespace SeaBattle
             {
                 var turns = GetTurns();
                 if (turns.Count == 0) yield break;
-                yield return StaticMethods.GetRandomElement(turns);
+                yield return CommonMethods.GetRandomElement(turns);
             }
         }
 
@@ -168,8 +168,8 @@ namespace SeaBattle
             var result = new Point[size];
             for (var i = 0; i < size; i++)
             {
-                var x = StaticMethods.GetRandomElement(xValues);
-                var y = StaticMethods.GetRandomElement(yValues);
+                var x = CommonMethods.GetRandomElement(xValues);
+                var y = CommonMethods.GetRandomElement(yValues);
                 result[i] = new Point(x, y);
                 xValues.Remove(x);
                 yValues.Remove(y);
