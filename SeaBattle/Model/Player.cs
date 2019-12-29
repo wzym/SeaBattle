@@ -68,10 +68,10 @@ namespace SeaBattle
 
         private void SetShip(Ship ship)
         {
-            foreach (var cell in Ship.PreBody(ship))
+            foreach (var cell in ship.PreliminaryBody())
                 Field.SetShip(cell.X, cell.Y, ship);
 
-            foreach (var cell in Ship.PreBuffer(ship))
+            foreach (var cell in ship.PreliminaryBuffer())
                 Field.SetNewType(cell.X, cell.Y, CellType.Bomb);
         }
 

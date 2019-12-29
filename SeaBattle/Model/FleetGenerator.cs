@@ -56,7 +56,8 @@ namespace SeaBattle
         }
 
         private bool IsGood(Ship variant)
-            => Ship.PreBody(variant)
+            => variant
+                .PreliminaryBody()
                 .All(cell => field[cell].Type == CellType.Sea);
     }
 }

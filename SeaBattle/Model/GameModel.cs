@@ -60,7 +60,9 @@ namespace SeaBattle
             view.MarkWinner(status.Player.Fleet.Health > 0);
             foreach(var ship in status.Rival.Fleet.Ships)
             {
-                view.MarkSurvivors(Ship.PreBody(ship).Where(c => status.Rival.Field[c].Type != CellType.Exploded));                
+                view.MarkSurvivors(ship
+                    .PreliminaryBody()
+                    .Where(c => status.Rival.Field[c].Type != CellType.Exploded));                
             }
         }
 

@@ -58,7 +58,7 @@ namespace SeaBattle
         
         internal void ReportAbtDeath(Ship deadShip)
         {
-            foreach (var cellBuff in Ship.PreBuffer(deadShip))
+            foreach (var cellBuff in deadShip.PreliminaryBuffer())
                 Model.SetNewType(cellBuff, CellType.Bomb);
 
             DeleteShip(deadShip);
@@ -108,7 +108,8 @@ namespace SeaBattle
         }
 
         private bool IsVariantPossible(Ship ship)
-            => Ship.PreBody(ship)
+            => ship
+                .PreliminaryBody()
                 .All(point => Model[point].Type == CellType.Sea);
 
         internal void ReturnResultBack(GameCell result)
@@ -146,7 +147,7 @@ namespace SeaBattle
             {
                 var ship = new Ship(cell, size, isHorizontal);
                 if (IsVariantPossible(ship))
-                    result.AddRange(Ship.PreBody(ship));
+                    result.AddRange(ship.PreliminaryBody());
             }
 
             return result.Distinct().ToList();

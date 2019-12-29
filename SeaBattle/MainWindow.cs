@@ -69,10 +69,9 @@ namespace SeaBattle
 
         internal void MarkSurvivors(IEnumerable<Point> survivedDecks)
         {
-            foreach(var cell in survivedDecks)
-            {
+            foreach(var cell in survivedDecks)            
                 rightCells.SetNewType(cell, CellType.SailingShip);
-            }
+            
             Invalidate();
         }
 
@@ -93,10 +92,10 @@ namespace SeaBattle
                 var head = new Point(LeftXCellIndex(args.X), LeftYCellIndex(args.Y));
                 if (!IsPlaceSuitableForSailing(head)) return;
 
-                foreach (var cell in Ship.PreBody(sailingShip))
+                foreach (var cell in sailingShip.PreliminaryBody())
                     leftCells.SetNewType(cell, CellType.Sea);
                 sailingShip.Sail(head);
-                foreach (var cell in Ship.PreBody(sailingShip))
+                foreach (var cell in sailingShip.PreliminaryBody())
                     leftCells.SetNewType(cell, CellType.SailingShip);
             }
             Invalidate();
@@ -109,8 +108,7 @@ namespace SeaBattle
                             
             foreach(var cell in Field.GetWorkingCellsIndexes(rightCells))
                 rightCells.SetNewType(cell, CellType.Sea);
-
-            //Paint -= winnerMarking; 
+            
             leftBackgroundBrush = new SolidBrush(leftBackground);
             rightBackgroundBrush = new SolidBrush(rightBackground);
         }
@@ -148,7 +146,8 @@ namespace SeaBattle
 
         private bool ShipsSetCorrect()
             => playerFleet.All(ship => 
-                Ship.PreBuffer(ship)
+                ship
+                    .PreliminaryBuffer()
                     .All(cell => leftCells[cell.X, cell.Y].Type != CellType.Ship));
 
         private void AddNActivateLabels()
@@ -192,7 +191,7 @@ namespace SeaBattle
             var field = inLeftField ? leftCells : rightCells;
             foreach(var ship in playerFleet)
             {
-                foreach (var cell in Ship.PreBody(ship))
+                foreach (var cell in ship.PreliminaryBody())
                 {
                     field.SetNewType(cell, CellType.Ship);
                     field.SetShip(cell.X, cell.Y, ship);
@@ -219,7 +218,7 @@ namespace SeaBattle
                             if (leftCells[xOfCell, yOfCell].Type != CellType.Ship)
                                 return;
                             sailingShip = leftCells[xOfCell, yOfCell].Ship;
-                            foreach (var cell in Ship.PreBody(sailingShip))
+                            foreach (var cell in sailingShip.PreliminaryBody())
                                 leftCells.SetNewType(cell, CellType.SailingShip);
                         }
                     }
@@ -243,11 +242,11 @@ namespace SeaBattle
                 case MouseButtons.Right:
                     if (shipSettingRegime && sailingShip != null)
                     {
-                        foreach(var cell in Ship.PreBody(sailingShip))
+                        foreach(var cell in sailingShip.PreliminaryBody())
                             leftCells.SetNewType(cell, CellType.Sea);
                         sailingShip.Reverse();
                         sailingShip.Sail(FindSuitablePlace(new Point(LeftXCellIndex(x), LeftYCellIndex(y))));
-                        foreach (var cell in Ship.PreBody(sailingShip))
+                        foreach (var cell in sailingShip.PreliminaryBody())
                             leftCells.SetNewType(cell, CellType.SailingShip);
                         Invalidate();
                     }
@@ -288,7 +287,7 @@ namespace SeaBattle
             };        
 
         private bool IsPlaceSuitableForSailing(Point place)
-            => Ship.PreBody(new Ship(place, sailingShip.Size, sailingShip.IsHorizontal))
+            => new Ship(place, sailingShip.Size, sailingShip.IsHorizontal).PreliminaryBody()
                 .All(cell => cell.X <= GameModel.WidthOfField 
                              && cell.Y <= GameModel.HeightOfField 
                              && cell.X >= 1 
@@ -312,7 +311,7 @@ namespace SeaBattle
         {
             var byWidth = ClientSize.Width / WidthCoefficient;
             var byHeight = ClientSize.Height / HeightCoefficient;
-            cellSize = Math.Min(byWidth, byHeight);
+            cellSize = Math.Min(byWidth, byHeight);            
             // ReSharper disable once PossibleLossOfFraction
             markPen.Width = cellSize / MarkPenCoefficient;
         }
@@ -360,8 +359,7 @@ namespace SeaBattle
             leftInfo.Font = font;
             rightInfo.Font = font;
             leftInfo.Top = (int)(cellSize * 1.5);
-            leftInfo.Left = cellSize * GameModel.WidthOfField + oneAndHalfPadding;
-            //rightInfo.Top = cellSize * GameModel.HeightOfField + padding / 2 - rightInfo.Height;
+            leftInfo.Left = cellSize * GameModel.WidthOfField + oneAndHalfPadding;            
             rightInfo.Top = (int)(cellSize * 7.5);
             rightInfo.Left = ClientSize.Width - oneAndHalfPadding - (GameModel.WidthOfField * cellSize) - rightInfo.Width;
 
@@ -436,18 +434,9 @@ namespace SeaBattle
 
         public void MarkWinner(bool winnerIsLeft)
         {
-            // var colour = winnerIsLeft ? Brushes.Aqua : Brushes.Red;
-
-            /*winnerMarking = (_, arg) =>
-            arg.Graphics.FillRectangle(colour
-            , ClientSize.Width - padding - (10 * cellSize), padding
-            , 10 * cellSize, 10 * cellSize);*/
             var backColour = winnerIsLeft ? leftBackground : rightBackground;
             leftBackgroundBrush = new SolidBrush(backColour);
-            rightBackgroundBrush = new SolidBrush(backColour);
-            //Paint += winnerMarking;                      
-        }
-
-        //private PaintEventHandler winnerMarking;        
+            rightBackgroundBrush = new SolidBrush(backColour);           
+        }        
     }
 }

@@ -19,7 +19,7 @@ namespace SeaBattle
 
         internal void RecordShipDeath(Ship deadShip)
         {
-            foreach (var bufCell in Ship.PreBuffer(deadShip))
+            foreach (var bufCell in deadShip.PreliminaryBuffer())
                 Passive.Field.SetNewType(bufCell, CellType.Bomb);
             if (Active.IsArtificial) Active.TurnGenerator.ReportAbtDeath(deadShip);
 
