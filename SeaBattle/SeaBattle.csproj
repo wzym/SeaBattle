@@ -71,8 +71,9 @@
     <Compile Include="MainWindow.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="Model\AI\CalcGenerator.cs" />
+    <Compile Include="Model\AI\MaskGenerator.cs" />
     <Compile Include="Model\AI\PresumedShip.cs" />
-    <Compile Include="Model\AI\SimpleLongestShipSearcher.cs" />
     <Compile Include="Model\AI\TurnGenerator.cs" />
     <Compile Include="Model\Field.cs" />
     <Compile Include="Model\Fleet.cs" />

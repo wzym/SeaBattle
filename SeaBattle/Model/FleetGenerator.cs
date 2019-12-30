@@ -20,7 +20,7 @@ namespace SeaBattle
             var ship = new Ship(variant.HeadPosition
                 , variant.Size
                 , variant.IsHorizontal
-                , GameStatus.NamesForTheGameShips.PullElement());
+                , GameStatus.NamesForTheGameShips.PullRandomly());
             return ship;
         }
 

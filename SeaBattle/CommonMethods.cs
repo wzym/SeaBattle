@@ -22,7 +22,7 @@ namespace SeaBattle
                 yield return new Point(x, y);
         }
 
-        internal static T PullElement<T>(this List<T> sequence)
+        internal static T PullRandomly<T>(this List<T> sequence)
         {
             var result = sequence[Rnd.Next(sequence.Count)];
             sequence.Remove(result);

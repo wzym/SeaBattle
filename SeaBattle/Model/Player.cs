@@ -21,7 +21,7 @@ namespace SeaBattle
         internal Player(bool isArtificial)
         {
             IsArtificial = isArtificial;
-            if (isArtificial) TurnGenerator = new TurnGenerator();
+            if (isArtificial) TurnGenerator = new MaskGenerator();
             Fleet = new Fleet();
             Field = new Field();
             InitializeFleet();
