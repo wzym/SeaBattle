@@ -84,11 +84,12 @@ namespace SeaBattle
                         ship.SetDamage();
                         if (ship.IsDead)
                         {
-                            status.RecordShipDeath(ship);
+                            
                             view.SetNewGameInfo(status.Player.Fleet.ToString()
                                 , status.Rival.Fleet.ToString());
                             var fieldName = passive == status.Rival ? "Вражеский" : "Ваш";
                             view.SetGlobalInfo($"{fieldName} {ship.Name} утонул ({ship}).");
+                            status.RecordShipDeath(ship);
                         }
                         break;
                     case CellType.Bomb:

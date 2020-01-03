@@ -20,8 +20,8 @@ namespace SeaBattle
         private readonly Color rightBackground = Color.FromArgb(0xFF, 0xEB, 0x3B);
         private readonly Color darkGray = Color.FromArgb(0x42, 0x42, 0x42);
         private readonly Color lightGray = Color.FromArgb(100, 0x42, 0x42, 0x42);
-        private readonly Color whiteTextBack = Color.FromArgb(0xEE, 0xEE, 0xEE);
-        private readonly Color whiteFieldBack = Color.FromArgb(0xFF, 0xFE, 0xFE);
+        private readonly Color helperWhite = Color.FromArgb(0xEE, 0xEE, 0xEE);
+        private readonly Color clearWhite = Color.FromArgb(0xFF, 0xFE, 0xFE);
 
         internal event Action<Point, MouseEventArgs> TurnDone;        
         internal event Action RestartGame;
@@ -41,7 +41,7 @@ namespace SeaBattle
         private readonly Button mainButton = new Button();
         private bool shipSettingRegime = true;        
         private Ship sailingShip;
-        private IEnumerable<Ship> playerFleet;
+        private IEnumerable<Ship> playerFleet;        
 
         public MainWindow()
         {
@@ -115,7 +115,7 @@ namespace SeaBattle
 
         private void AddNActivateButtons()
         {
-            mainButton.BackColor = whiteTextBack;
+            mainButton.BackColor = helperWhite;
             mainButton.ForeColor = darkGray;
             mainButton.Click += BeforeGameOnButtonClick();
             mainButton.Text = Resources.MainWindow_before_game;
@@ -127,9 +127,10 @@ namespace SeaBattle
         {
             shipSettingRegime = true;
             RestartGame?.Invoke();
+            mainButton.Text = Resources.MainWindow_before_game;
             mainButton.Click -= DuringGameOnButtonClick();
             mainButton.Click += BeforeGameOnButtonClick();
-            globalGameInfo.Text = Resources.Ship_setting_instruction;
+            globalGameInfo.Text = Resources.Ship_setting_instruction;            
         };
         private EventHandler BeforeGameOnButtonClick() => (sender, args) =>
         {
@@ -138,6 +139,7 @@ namespace SeaBattle
                 globalGameInfo.Text = Resources.Wrong_Ship_Setting;
                 return;
             }
+            mainButton.Text = Resources.MainWindow_restart;
             shipSettingRegime = false;
             FleetIsChosen?.Invoke(playerFleet);            
             mainButton.Click -= BeforeGameOnButtonClick();
@@ -163,8 +165,8 @@ namespace SeaBattle
             globalGameInfo.Padding = new Padding(10, 0, 0, 1);
             globalGameInfo.ForeColor = darkGray;            
             globalGameInfo.TextAlign = ContentAlignment.MiddleRight;
-            globalGameInfo.BackColor = whiteTextBack;
-            Controls.Add(globalGameInfo);            
+            globalGameInfo.BackColor = helperWhite;
+            Controls.Add(globalGameInfo);                   
         }
 
         internal void SetNewGameInfo(string leftStatus, string rightStatus)
@@ -327,9 +329,9 @@ namespace SeaBattle
             {
                 for (var x = 1; x < GameModel.WidthOfField + 1; x++)
                 {
-                    g.FillRectangle(new SolidBrush(whiteFieldBack), leftX, cY, cellSize, cellSize);
+                    g.FillRectangle(new SolidBrush(clearWhite), leftX, cY, cellSize, cellSize);
                     g.DrawRectangle(borderPen, leftX, cY, cellSize, cellSize);
-                    g.FillRectangle(new SolidBrush(whiteFieldBack), rightX, cY, cellSize, cellSize);
+                    g.FillRectangle(new SolidBrush(clearWhite), rightX, cY, cellSize, cellSize);
                     g.DrawRectangle(borderPen, rightX, cY, cellSize, cellSize);
                     DrawCellObject(leftX, cY, leftCells[x, y].Type, g);
                     DrawCellObject(rightX, cY, rightCells[x, y].Type, g);
@@ -417,14 +419,14 @@ namespace SeaBattle
                     break;                    
                 case CellType.Ship:
                     g.FillRectangle(new SolidBrush(darkGray), x, y, cellSize, cellSize);
-                    g.DrawRectangle(new Pen(whiteFieldBack, 1), x + cellBorder, y + cellBorder
+                    g.DrawRectangle(new Pen(clearWhite, 1), x + cellBorder, y + cellBorder
                         , cellSize - 2 * cellBorder, cellSize - 2 * cellBorder);
                     break;                    
                 case CellType.Sea:
                     break;
                 case CellType.SailingShip:
                     g.FillRectangle(new SolidBrush(lightGray), x, y, cellSize, cellSize);
-                    g.DrawRectangle(new Pen(whiteFieldBack, 1), x + cellBorder, y + cellBorder
+                    g.DrawRectangle(new Pen(clearWhite, 1), x + cellBorder, y + cellBorder
                         , cellSize - 2 * cellBorder, cellSize - 2 * cellBorder);
                     break;
                 default:
@@ -436,7 +438,9 @@ namespace SeaBattle
         {
             var backColour = winnerIsLeft ? leftBackground : rightBackground;
             leftBackgroundBrush = new SolidBrush(backColour);
-            rightBackgroundBrush = new SolidBrush(backColour);           
+            rightBackgroundBrush = new SolidBrush(backColour);
+
+            SetGlobalInfo(winnerIsLeft ? Resources.Winner : Resources.Loser);            
         }        
     }
 }

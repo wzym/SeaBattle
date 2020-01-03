@@ -118,7 +118,10 @@
     <value>Крайние клавиши мыши - выбрать, установить и повернуть корабль.</value>
   </data>
   <data name="MainWindow_before_game" xml:space="preserve">
-    <value>Start?</value>
+    <value>Начать игру</value>
+  </data>
+  <data name="MainWindow_restart" xml:space="preserve">
+    <value>Всё заново</value>
   </data>
   <data name="Wrong_Ship_Setting" xml:space="preserve">
     <value>Неверная расстановка кораблей.</value>
@@ -128,5 +131,11 @@
   </data>
   <data name="Excess_left_field_clicks_info" xml:space="preserve">
     <value>Вот ведь хуяшечки: столько бестолкового движения в одном месте.</value>
+  </data>
+  <data name="Loser" xml:space="preserve">
+    <value>Поражение</value>
+  </data>
+  <data name="Winner" xml:space="preserve">
+    <value>Победа</value>
   </data>
 </root>
