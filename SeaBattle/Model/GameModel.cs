@@ -47,7 +47,7 @@ namespace SeaBattle
         private void ActivateNewGame()
         {
             status = new GameStatus();
-            status.GameEnd += WorkOnGameEnd;
+            //status.GameEnd += WorkOnGameEnd;
             view.Clear();
             view.SetAndDrawFleet(status.Player.Fleet.Ships, true);
             view.SetNewGameInfo(status.Player.Fleet.ToString(), status.Rival.Fleet.ToString());            
@@ -85,13 +85,13 @@ namespace SeaBattle
                         ship.SetDamage();
                         if (ship.IsDead)
                         {
-                            
+                            status.RecordShipDeath(ship);
                             view.SetNewGameInfo(status.Player.Fleet.ToString()
                                 , status.Rival.Fleet.ToString());
                             var fieldName = passive == status.Rival ?
                                 Resources.Of_Rival : Resources.Yours_one;
                             view.SetGlobalInfo($"{fieldName} {ship.Name} {Resources.Drowned} ({ship}).");
-                            status.RecordShipDeath(ship);
+                            if (!status.IsGameContinues) WorkOnGameEnd();
                         }
                         break;
                     case CellType.Bomb:
@@ -104,7 +104,7 @@ namespace SeaBattle
                         break;
                     default:
                         throw new ArgumentOutOfRangeException();
-                }                
+                }
                 active.ReturnResultBack(passive.Field[turn]);
                 ShowField(passive.Field, active == status.Rival);//
                 if (!status.Active.IsArtificial) break;                

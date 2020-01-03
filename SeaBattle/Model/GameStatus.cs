@@ -5,8 +5,7 @@ using System.Linq;
 namespace SeaBattle
 {
     internal class GameStatus
-    {
-        internal event Action GameEnd; 
+    {        
         internal Player Player { get; }
         internal Player Rival { get; }
         internal bool IsGameContinues { get; private set; } = true;
@@ -26,11 +25,10 @@ namespace SeaBattle
             foreach (var bufCell in deadShip.PreliminaryBuffer())
                 Passive.Field.SetNewType(bufCell, CellType.Bomb);
             if (Active.IsArtificial) Active.TurnGenerator.ReportAbtDeath(deadShip);
-
             Passive.Fleet.Remove(deadShip);
-            if (!Passive.IsLost) return;
-            IsGameContinues = false;
-            GameEnd?.Invoke();
+
+            if (Passive.IsLost)
+                IsGameContinues = false;            
         }
 
         internal void DefineActivity()
