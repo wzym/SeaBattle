@@ -15,7 +15,7 @@ namespace SeaBattle
         
         internal GameStatus()
         {
-            NamesForTheGameShips = CommonParameters.ShipNames.ToList();
+            NamesForTheGameShips = CommonParameters.ShipNamesByHashSet.ToList();
             Player = new Player(false);
             Rival = new Player(true);
         }

@@ -14,7 +14,7 @@ namespace SeaBattle
             "Стреляющий без поражения в каждой третьей войне", "Рождённый в январе"
         };
 
-        internal static readonly string[] Sss = new HashSet<string>
+        internal static readonly string[] ShipNamesByHashSet = new HashSet<string>
         {
             "Стремительный", "Коварный", "Летящий", "Упорный", "Леденящий", "Двенадцатый", "Контролирующий",
             "Подводный", "Невероятный", "Чёрный", "Гладкий", "Светящийся", "Разящий", "Бездомный", "Нескончаемый",
