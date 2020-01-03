@@ -38,7 +38,16 @@ namespace SeaBattle
                 result.Append($"{ GetShipSymPicture(stEntry.Key) } { stEntry.Value }\n");
             
             return result.ToString();
-        }     
+        }
+
+        /*public override string ToString()
+        {
+            var result = new StringBuilder();
+            foreach (var stEntry in Status.OrderByDescending(e => e.Key))
+                result.Append($"{ GetShipSymPicture(stEntry.Key) } { stEntry.Value }\n");
+            
+            return result.ToString();
+        }   */
 
         private string GetShipSymPicture(int size)
         {

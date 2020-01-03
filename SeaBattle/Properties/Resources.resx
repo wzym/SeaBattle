@@ -142,7 +142,7 @@
     <value>Победа</value>
   </data>
   <data name="Drowned" xml:space="preserve">
-    <value>Утонул</value>
+    <value>утонул</value>
   </data>
   <data name="First_turn_is_rivals_one" xml:space="preserve">
     <value>Первый ход достался машине.</value>

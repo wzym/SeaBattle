@@ -478,7 +478,8 @@ namespace SeaBattle
             leftBackgroundBrush = new SolidBrush(backColour);
             rightBackgroundBrush = new SolidBrush(backColour);
 
-            SetGlobalInfo(winnerIsLeft ? Resources.Winner : Resources.Loser);            
-        }        
+            SetGlobalInfo(winnerIsLeft ? Resources.Winner : Resources.Loser);
+            mainButton.Invalidate();
+        }
     }
 }

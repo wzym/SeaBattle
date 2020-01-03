@@ -61,7 +61,7 @@ namespace SeaBattle.Properties {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Утонул.
+        ///   Ищет локализованную строку, похожую на утонул.
         /// </summary>
         internal static string Drowned {
             get {
