@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace SeaBattle
 {
@@ -23,7 +24,7 @@ namespace SeaBattle
             ActivateNewGame();
             view.TurnDone += (p, _) => 
             {
-                if (IsTurnLocked) return;
+                if (isTurnLocked) return;
                 status.Player.CurrentTurn = p;
                 status.SetPlayerActive();
                 Turn();
@@ -61,12 +62,13 @@ namespace SeaBattle
                     .Where(c => status.Rival.Field[c].Type != CellType.Exploded)));
         }
 
-        private bool IsTurnLocked = false;
+        private bool isTurnLocked;
 
         private async void Turn()
         {
-            if (IsTurnLocked) return;
-            IsTurnLocked = true;
+            if (isTurnLocked) return;
+            isTurnLocked = true;
+            Cursor.Hide();
             while (status.IsGameContinues)
             {
                 var active = status.Active;
@@ -98,7 +100,8 @@ namespace SeaBattle
                 ShowField(passive.Field, active == status.Rival);//
                 if (!status.Active.IsArtificial) break;
             }
-            IsTurnLocked = false;
+            isTurnLocked = false;
+            Cursor.Show();
         }
 
         private void HandleShip(GameCell cell, Point turn, Player passive)

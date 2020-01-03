@@ -8,7 +8,7 @@ namespace SeaBattle
 {
     internal class Fleet
     {
-        internal Dictionary<int, int> Status { get; private set; } = new Dictionary<int, int>();
+        private Dictionary<int, int> Status { get; set; } = new Dictionary<int, int>();
         internal List<Ship> Ships { get; private set; }  = new List<Ship>();
         internal int Health => Ships.Count;
 
@@ -35,26 +35,9 @@ namespace SeaBattle
         {
             var result = new StringBuilder();
             foreach (var stEntry in Status.OrderByDescending(e => e.Key))
-                result.Append($"{ GetShipSymPicture(stEntry.Key) } { stEntry.Value }\n");
+                result.Append($"{ new string('\u25A0', stEntry.Key) } { stEntry.Value }\n");
             
             return result.ToString();
-        }
-
-        /*public override string ToString()
-        {
-            var result = new StringBuilder();
-            foreach (var stEntry in Status.OrderByDescending(e => e.Key))
-                result.Append($"{ GetShipSymPicture(stEntry.Key) } { stEntry.Value }\n");
-            
-            return result.ToString();
-        }   */
-
-        private string GetShipSymPicture(int size)
-        {
-            var result = "";
-            for (var i = 0; i < size; i++)
-                result += "\u25A0";
-            return result;
         }
     }
 }
