@@ -37,7 +37,7 @@ namespace SeaBattle
             
             var result = new StringBuilder();
             foreach(var stEntry in status.OrderByDescending(e => e.Key))                            
-                result.Append($"{stEntry.Key} - {stEntry.Value}\n");
+                result.Append($"{stEntry.Key}: {stEntry.Value}\n");
             
             return result.ToString();
         }
