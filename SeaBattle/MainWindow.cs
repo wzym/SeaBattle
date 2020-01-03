@@ -22,6 +22,10 @@ namespace SeaBattle
         private readonly Color lightGray = Color.FromArgb(100, 0x42, 0x42, 0x42);
         private readonly Color helperWhite = Color.FromArgb(0xEE, 0xEE, 0xEE);
         private readonly Color clearWhite = Color.FromArgb(0xFF, 0xFE, 0xFE);
+        private readonly Brush darkGrayBrush;
+        private readonly Brush lightGrayBrush;
+        private readonly Brush clearWhiteBrush;
+        private readonly Pen clearWhitePen;
 
         internal event Action<Point, MouseEventArgs> TurnDone;        
         internal event Action RestartGame;
@@ -50,6 +54,12 @@ namespace SeaBattle
             markPen = new Pen(darkGray, 1);
             //Icon = new Icon("../../ship.ico");
             DoubleBuffered = true;
+
+            darkGrayBrush = new SolidBrush(darkGray);
+            lightGrayBrush = new SolidBrush(lightGray);
+            clearWhiteBrush = new SolidBrush(clearWhite);
+            clearWhitePen = new Pen(clearWhite, 1);
+
             SetClientSizeCore();            
             ChangeSizes();           
             
@@ -66,7 +76,7 @@ namespace SeaBattle
             AddNActivateButtons();
             globalGameInfo.Text = Resources.Ship_setting_instruction;
         }
-
+        
         internal void MarkSurvivors(IEnumerable<Point> survivedDecks)
         {
             foreach(var cell in survivedDecks)            
@@ -329,9 +339,9 @@ namespace SeaBattle
             {
                 for (var x = 1; x < GameModel.WidthOfField + 1; x++)
                 {
-                    g.FillRectangle(new SolidBrush(clearWhite), leftX, cY, cellSize, cellSize);
+                    g.FillRectangle(clearWhiteBrush, leftX, cY, cellSize, cellSize);
                     g.DrawRectangle(borderPen, leftX, cY, cellSize, cellSize);
-                    g.FillRectangle(new SolidBrush(clearWhite), rightX, cY, cellSize, cellSize);
+                    g.FillRectangle(clearWhiteBrush, rightX, cY, cellSize, cellSize);
                     g.DrawRectangle(borderPen, rightX, cY, cellSize, cellSize);
                     DrawCellObject(leftX, cY, leftCells[x, y].Type, g);
                     DrawCellObject(rightX, cY, rightCells[x, y].Type, g);
@@ -418,21 +428,21 @@ namespace SeaBattle
                         , x + cellSize - cellBorder, y + cellBorder);
                     break;                    
                 case CellType.Ship:
-                    g.FillRectangle(new SolidBrush(darkGray), x, y, cellSize, cellSize);
-                    g.DrawRectangle(new Pen(clearWhite, 1), x + cellBorder, y + cellBorder
+                    g.FillRectangle(darkGrayBrush, x, y, cellSize, cellSize);
+                    g.DrawRectangle(clearWhitePen, x + cellBorder, y + cellBorder
                         , cellSize - 2 * cellBorder, cellSize - 2 * cellBorder);
                     break;                    
                 case CellType.Sea:
                     break;
                 case CellType.SailingShip:
-                    g.FillRectangle(new SolidBrush(lightGray), x, y, cellSize, cellSize);
-                    g.DrawRectangle(new Pen(clearWhite, 1), x + cellBorder, y + cellBorder
+                    g.FillRectangle(lightGrayBrush, x, y, cellSize, cellSize);
+                    g.DrawRectangle(clearWhitePen, x + cellBorder, y + cellBorder
                         , cellSize - 2 * cellBorder, cellSize - 2 * cellBorder);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(cellType), cellType, null);
             }
-        }
+        }                
 
         public void MarkWinner(bool winnerIsLeft)
         {
