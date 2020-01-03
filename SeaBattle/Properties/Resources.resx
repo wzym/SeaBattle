@@ -162,4 +162,7 @@
   <data name="Yours_one" xml:space="preserve">
     <value>Ваш</value>
   </data>
+  <data name="Unintended_Cell_Type" xml:space="preserve">
+    <value>Попалась неизвестная системе ячейка.</value>
+  </data>
 </root>

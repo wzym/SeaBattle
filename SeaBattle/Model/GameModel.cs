@@ -103,7 +103,7 @@ namespace SeaBattle
                     case CellType.SailingShip:
                         break;
                     default:
-                        throw new ArgumentOutOfRangeException();
+                        throw new ArgumentOutOfRangeException(Resources.Unintended_Cell_Type);
                 }
                 active.ReturnResultBack(passive.Field[turn]);
                 ShowField(passive.Field, active == status.Rival);//
