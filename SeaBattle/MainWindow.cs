@@ -267,7 +267,7 @@ namespace SeaBattle
                 foreach (var cell in GetNeighbors(currPlace)
                     .Where(c => c.Type == CellType.Sea && !visited.Contains(new Point(c.X, c.Y))))
                     presumed.Enqueue(cell);
-                if (presumed.Count < 1) throw new Exception("Not found suitable place.");
+                if (presumed.Count < 1) throw new Exception(Resources.Not_found_suitable_place);
                 var curr = presumed.Dequeue();
                 currPlace = new Point(curr.X, curr.Y);
                 if (IsPlaceSuitableForSailing(currPlace)) return currPlace;

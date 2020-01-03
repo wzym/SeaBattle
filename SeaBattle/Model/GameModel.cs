@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SeaBattle.Properties;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -34,12 +35,12 @@ namespace SeaBattle
             status.DefineActivity();
             if (status.Active == status.Rival)
             {
-                view.SetGlobalInfo("Первый ход достался машине.");
+                view.SetGlobalInfo(Resources.First_turn_is_rivals_one);
                 Turn();
             } 
             else
             {
-                view.SetGlobalInfo("Ваш ход.");
+                view.SetGlobalInfo(Resources.First_turn_is_yours);
             }
         }
 
@@ -87,16 +88,17 @@ namespace SeaBattle
                             
                             view.SetNewGameInfo(status.Player.Fleet.ToString()
                                 , status.Rival.Fleet.ToString());
-                            var fieldName = passive == status.Rival ? "Вражеский" : "Ваш";
-                            view.SetGlobalInfo($"{fieldName} {ship.Name} утонул ({ship}).");
+                            var fieldName = passive == status.Rival ?
+                                Resources.Of_Rival : Resources.Yours_one;
+                            view.SetGlobalInfo($"{fieldName} {ship.Name} {Resources.Drowned} ({ship}).");
                             status.RecordShipDeath(ship);
                         }
                         break;
                     case CellType.Bomb:
-                        if (active.IsArtificial) throw new ArgumentException("Ум повторяется.");
+                        if (active.IsArtificial) throw new ArgumentException(Resources.Same_AI_Turn);
                         break;
                     case CellType.Exploded:
-                        if (active.IsArtificial) throw new ArgumentException("Ум повторяется.");
+                        if (active.IsArtificial) throw new ArgumentException(Resources.Same_AI_Turn);
                         break;
                     case CellType.SailingShip:
                         break;
