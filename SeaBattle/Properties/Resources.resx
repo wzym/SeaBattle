@@ -165,4 +165,10 @@
   <data name="Unintended_Cell_Type" xml:space="preserve">
     <value>Попалась неизвестная системе ячейка.</value>
   </data>
+  <data name="Negative_Ships_Amount" xml:space="preserve">
+    <value>Уменьшение количества кораблей, которых уже не было.</value>
+  </data>
+  <data name="Removing_Not_Exist_Ship" xml:space="preserve">
+    <value>Попытка удалить несуществующий корабль.</value>
+  </data>
 </root>
