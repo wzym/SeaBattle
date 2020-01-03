@@ -1,7 +1,9 @@
 ﻿using SeaBattle.Properties;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace SeaBattle
 {
@@ -11,7 +13,7 @@ namespace SeaBattle
         internal const int HeightOfField = 10;
 
         private readonly MainWindow view;
-        private GameStatus status;
+        private GameStatus status;        
 
         internal GameModel(MainWindow window)
         {            
@@ -21,6 +23,7 @@ namespace SeaBattle
             ActivateNewGame();
             view.TurnDone += (p, _) => 
             {
+                if (IsTurnLocked) return;
                 status.Player.CurrentTurn = p;
                 status.SetPlayerActive();
                 Turn();
@@ -53,43 +56,32 @@ namespace SeaBattle
         private void WorkOnGameEnd()
         {
             view.MarkWinner(status.Player.Fleet.Health > 0);
-            foreach(var ship in status.Rival.Fleet.Ships)
-            {
-                view.MarkSurvivors(ship
-                    .PreliminaryBody()
-                    .Where(c => status.Rival.Field[c].Type != CellType.Exploded));                
-            }
+            status.Rival.Fleet.Ships.ForEach(ship => view.MarkSurvivors(
+                ship.PreliminaryBody()
+                    .Where(c => status.Rival.Field[c].Type != CellType.Exploded)));
         }
 
-        private void Turn()
+        private bool IsTurnLocked = false;
+
+        private async void Turn()
         {
+            if (IsTurnLocked) return;
+            IsTurnLocked = true;
             while (status.IsGameContinues)
             {
                 var active = status.Active;
-                var passive = status.Passive;
+                var passive = status.Passive;                
+                if (active.IsArtificial) await Task.Delay(CommonParameters.TimeLapse).ConfigureAwait(true);
                 var turn = status.Active.CurrentTurn;
                 var cell = status.Passive.Field[turn];
 
                 switch (cell.Type)
                 {
                     case CellType.Sea:                        
-                        status.Passive.Field.SetNewType(turn, CellType.Bomb);
-                        status.InvertActivity();
+                        HandleSea(turn);
                         break;
                     case CellType.Ship:
-                        var ship = cell.Ship;                        
-                        status.Passive.Field.SetNewType(turn, CellType.Exploded);
-                        ship.SetDamage();
-                        if (ship.IsDead)
-                        {
-                            status.RecordShipDeath(ship);
-                            view.SetNewGameInfo(status.Player.Fleet.ToString()
-                                , status.Rival.Fleet.ToString());
-                            var fieldName = passive == status.Rival ?
-                                Resources.Of_Rival : Resources.Yours_one;
-                            view.SetGlobalInfo($"{fieldName} {ship.Name} {Resources.Drowned} ({ship}).");
-                            if (!status.IsGameContinues) WorkOnGameEnd();
-                        }
+                        HandleShip(cell, turn, passive);
                         break;
                     case CellType.Bomb:
                         if (active.IsArtificial) throw new ArgumentException(Resources.Same_AI_Turn);
@@ -101,11 +93,32 @@ namespace SeaBattle
                         break;
                     default:
                         throw new ArgumentOutOfRangeException(Resources.Unintended_Cell_Type);
-                }
-                active.ReturnResultBack(passive.Field[turn]);
+                }                
+                active.ReturnResultBack(passive.Field[turn]);                
                 ShowField(passive.Field, active == status.Rival);//
-                if (!status.Active.IsArtificial) break;                
+                if (!status.Active.IsArtificial) break;
             }
+            IsTurnLocked = false;
+        }
+
+        private void HandleShip(GameCell cell, Point turn, Player passive)
+        {
+            var ship = cell.Ship;
+            status.Passive.Field.SetNewType(turn, CellType.Exploded);
+            ship.SetDamage();
+            if (!ship.IsDead) return;
+            status.RecordShipDeath(ship);
+            view.SetNewGameInfo(status.Player.Fleet.ToString()
+                , status.Rival.Fleet.ToString());
+            var fieldName = passive == status.Rival ? Resources.Of_Rival : Resources.Yours_one;
+            view.SetGlobalInfo($"{fieldName} {ship.Name} {Resources.Drowned} ({ship}).");
+            if (!status.IsGameContinues) WorkOnGameEnd();
+        }
+
+        private void HandleSea(Point turn)
+        {
+            status.Passive.Field.SetNewType(turn, CellType.Bomb);
+            status.InvertActivity();
         }
 
         private void ShowField(Field field, bool isLeftField)

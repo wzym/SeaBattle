@@ -46,9 +46,9 @@ namespace SeaBattle
         private bool shipSettingRegime = true;        
         private Ship sailingShip;
         private IEnumerable<Ship> playerFleet;        
-
+        
         public MainWindow()
-        {
+        {            
             BackColor = darkGray;
             borderPen = new Pen(darkGray, 1);
             markPen = new Pen(darkGray, 1);

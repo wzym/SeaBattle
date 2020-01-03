@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace SeaBattle
@@ -28,5 +29,7 @@ namespace SeaBattle
         {
             {4, 1}, {3, 2}, {2, 3}, {1, 4}
         };
+
+        public const int TimeLapse = 750;
     }
 }

@@ -12,10 +12,10 @@ namespace SeaBattle
         static void Main()
         {
             Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);            
+            Application.SetCompatibleTextRenderingDefault(false);
             var form = new MainWindow();
-            new GameModel(form);
-            Application.Run(form);
+            new GameModel(form);            
+            Application.Run(form);            
         }
     }
 }

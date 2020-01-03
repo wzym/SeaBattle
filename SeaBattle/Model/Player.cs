@@ -9,19 +9,29 @@ namespace SeaBattle
         internal Field Field { get; }
         internal Fleet Fleet { get; }
         internal bool IsLost => Fleet.Health == 0;
-        internal TurnGenerator TurnGenerator { get; }
+        internal TurnGenerator TurnGenerator { get; }        
         
         private Point currentTurn;        
         internal Point CurrentTurn
         {
-            get => IsArtificial ? TurnGenerator.NextTurn() : currentTurn;
-            set => currentTurn = value;
-        }
+            get
+            {
+                if (!IsArtificial) return currentTurn; 
+                return TurnGenerator.NextTurn();
+            }
+            set
+            {                
+                currentTurn = value;
+            }
+        }        
 
         internal Player(bool isArtificial)
         {
             IsArtificial = isArtificial;
-            if (isArtificial) TurnGenerator = new MaskGenerator();
+            if (isArtificial)
+            {
+                TurnGenerator = new MaskGenerator();
+            }
             Fleet = new Fleet();
             Field = new Field();
             InitializeFleet();
