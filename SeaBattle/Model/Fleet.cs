@@ -28,15 +28,24 @@ namespace SeaBattle
             Status[deadShip.Size]--;
             if (Status[deadShip.Size] < 0) 
                 throw new ArgumentException(Resources.Negative_Ships_Amount);
+            if (Status[deadShip.Size] == 0) Status.Remove(deadShip.Size);//
         }
 
         public override string ToString()
         {
             var result = new StringBuilder();
-            foreach(var stEntry in Status.OrderByDescending(e => e.Key))                            
-                result.Append($"{stEntry.Key}: {stEntry.Value}\n");
+            foreach (var stEntry in Status.OrderByDescending(e => e.Key))
+                result.Append($"{ GetShipSymPicture(stEntry.Key) } { stEntry.Value }\n");
             
             return result.ToString();
+        }     
+
+        private string GetShipSymPicture(int size)
+        {
+            var result = "";
+            for (var i = 0; i < size; i++)
+                result += "\u25A0";
+            return result;
         }
     }
 }

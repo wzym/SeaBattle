@@ -329,9 +329,17 @@ namespace SeaBattle
         }
 
         private void ReDraw(Graphics g)
-        {            
+        {
             padding = cellSize;
             DrawBackground(g);
+            DrawFields(g);
+            MoveLabels();
+            //DrawFleetStatuses(g);
+            SetButtonPosition();
+        }
+
+        private void DrawFields(Graphics g)
+        {
             var leftX = padding;
             var rightX = ClientSize.Width - padding - GameModel.WidthOfField * cellSize;
             var cY = padding;
@@ -353,15 +361,35 @@ namespace SeaBattle
                 rightX = ClientSize.Width - padding - GameModel.WidthOfField * cellSize;
                 cY += cellSize;
             }
-            MoveLabels();
-            SetButtonPosition();
         }
 
-        private void MoveLabels()
+      /*  private void DrawFleetStatuses(Graphics g)
         {
+            var minSize = cellSize / 2;
+            var leftX = cellSize * GameModel.WidthOfField + padding * 2;
+            var upY = padding;
+            var downY = padding + (GameModel.HeightOfField / 2 - 1) * cellSize;
+            
+            foreach(var lengthAmount in playerFleetStatus.OrderBy(t => t.Key))
+            {
+                
+                for(var i = 0; i < lengthAmount.Value; i++)
+                {
+                    
+                }
+            }
+            
+            foreach(var length in rivalFleetStatus.OrderByDescending(t => t.Key))
+            {
+
+            }
+        }*/
+
+        private void MoveLabels()
+        {          
             var oneAndHalfPadding = 3 / 2 * padding;
             var boxHeight = (int)(cellSize * GameModel.HeightOfField / 2.0 - cellSize * 1.3);
-            var boxWidth = (int)(2.5 * cellSize);
+            var boxWidth = 3 * cellSize;
             leftInfo.Height = boxHeight;
             leftInfo.Width = boxWidth;
             rightInfo.Height = boxHeight;
